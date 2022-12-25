@@ -10,6 +10,7 @@ local l1
         dec BH
         jnz l1
 endm draw_rect
+;-------------
 exchange_values MACRO c1,c2
 
 endm exchange_values
@@ -97,6 +98,52 @@ end_check:
     jmp end_check
 endm check_square_color
 ;------------
+draw_rectangle macro x_rect,y_rect,a
+local l11,l22,skip_me
+
+    mov ax,20d
+    mov bl,y_rect
+    mov bh,0
+    mul bx  ; ax = y * 20
+    mov bx,ax
+    mov rect_y_end,bx
+    add rect_y_end,20d
+    l11:
+        mov ax,40d
+        mov dl,x_rect
+        mov dh,0
+        mul dx ;ax = x * 40
+        mov dx,ax
+        mov rect_x_end,dx
+        add rect_x_end,40d ;40d
+        l22:
+             push dx
+            ;get color of existing pixels
+            mov ah,0Dh
+            mov cx,dx;column
+            mov dx,bx;row
+            int 10H     ; AL = COLOR of exisiting pixel
+
+            cmp al,0
+            je skip_me
+            cmp al,15d
+            je skip_me
+
+            mov ah,0ch  ;draw pixel
+            mov al,color_rect
+            int 10h
+
+        skip_me:
+        pop dx
+        inc dx
+        cmp dx,rect_x_end
+        jne l22
+    inc bx
+    cmp bx,rect_y_end
+    jne l11
+  endm draw_rectangle
+;------------
+
 
 .model small
 .stack 64
@@ -139,6 +186,12 @@ square_info LABEL BYTE
     piece_x_end dw ?
     piece_y_end dw ?
     piece_background db ?
+;-------------draw_rectangle----------;
+    rect_x_end dw ?
+    rect_y_end dw ?
+;--------ckeck selected piece---------;
+selected_piece_x db 0
+selected_piece_y db 0
 ;-------------white pieces--------------;
 soldier db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,7,15,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,15,15,15,15,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
@@ -392,7 +445,7 @@ db 15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,0,0,0,0,0,0,0,0,0,0,7,15,15,15,1
 db 15,15,15,15,15,15,15,15,15,15,15,15,15,15,8,0,0,0,0,0,0,0,0,0,0,0,15,15,15,15,15,15,15,15,15,15,15,15,15,15
 db 15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,8,8,8,8,8,8,8,8,8,8,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15
 ;-----------
-test db 0,0,0,0,0,0,0,0,0,0,0,0,38,0,0,0,0,0,0,0,0,0,0,0,0
+testt db 0,0,0,0,0,0,0,0,0,0,0,0,38,0,0,0,0,0,0,0,0,0,0,0,0
 db 0,0,0,0,0,0,0,0,0,0,0,35,15,30,0,0,0,0,0,0,0,0,0,0,0
 db 0,0,0,0,0,0,0,0,0,0,0,19,15,0,0,0,0,0,0,0,0,0,0,0,0
 db 0,0,0,0,0,0,0,0,0,24,41,45,15,42,38,19,0,0,0,0,0,0,0,0,0
@@ -417,7 +470,9 @@ db 0,0,0,0,0,0,0,43,15,15,15,15,15,15,15,15,15,28,0,0,0,0,0,0,0
 db 0,0,0,0,0,0,0,234,15,15,15,15,15,15,15,15,15,28,0,0,0,0,0,0,0
 db 0,0,0,0,0,0,0,15,15,15,15,15,15,15,15,15,15,38,0,0,0,0,0,0,0
 db 0,0,0,0,0,0,0,0,23,24,24,24,24,24,25,26,21,0,0,0,0,0,0,0,0
-;---------
+;-----------------
+key db ? ;key pressed
+;-----------------
 .code
 main proc far
     mov ax,@data
@@ -425,7 +480,7 @@ main proc far
 
     mov ax,0A000h
     mov es,ax
-    
+
     mov ah,0
     mov al,13h
     int 10h
@@ -439,18 +494,21 @@ main proc far
 
     mov di,0
     draw_rect_trans sel_color
-    continue_label:
-    
-    push ax 
-    call Navigate
-    pop ax  
-    cmp continue_counter,0  
-    jnz continue_label
 
+continue_label:
+
+    call Navigate
+    call ckeck_selected
+
+;mail loop of game,not to end game
+cmp continue_counter,0
+jnz continue_label
+
+;just for dosbox
     mov       ah, 4ch
     mov       al, 01h
     int       21h
-    
+
     hlt
 main endp
 ;-----------------
@@ -493,7 +551,8 @@ initialize_pieces proc
     draw_piece b_soldier,7,6
 ret
 initialize_pieces endp
-draw_board proc 
+;-----------------
+draw_board proc
     row_l1:
     push di
     draw_rect color1
@@ -521,10 +580,33 @@ draw_board proc
     ret
 draw_board endp
 ;-----------------
+ckeck_selected proc
+
+    cmp key,'q'
+    jne skip37
+
+    mov al,sq_cursor_h
+    mov selected_piece_x,al
+    mov al,sq_cursor_v
+    mov selected_piece_y,al
+        draw_rectangle selected_piece_x,selected_piece_y,11
+    skip37:
+
+ret
+ckeck_selected endp
+;-----------------
 Navigate proc
     ;wait for user input
-    mov ah,0
+  CHECK_ifkeypressed:
+    mov ah,1
+    int 16h;0 if no key pressed
+    jnz key_pressed
+    mov key,'0';set key to 0
+    ret
+  key_pressed:
+    mov ah,0 ;consume buffer
     int 16h ;w=up,s=down,a=left,d=right
+    mov key,al
     ;if al == ascii of any of these letters
     ;it should do a distinct reaction
     ;al == d (right)
