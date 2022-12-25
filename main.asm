@@ -54,7 +54,34 @@ cmp bx,piece_y_end
 jne l1
 
 endm draw_piece
-;-----------
+;-------------
+draw_rect_trans MACRO color
+    local l1,l2,l3,end
+        mov dx,di
+        mov bl,es:[di]
+        mov w_counter,40
+        mov l_counter,20
+        mov al,color
+        l1: cmp es:[di],bl
+            jnz l2
+            
+            mov cx,1
+            rep stosb
+            
+        l3: dec w_counter
+            jnz l1
+            mov w_counter,40
+            add dx,320
+            mov di,dx
+            dec l_counter
+            jnz l1
+            jmp end
+            
+            l2: inc di
+            jmp l3
+      end:           
+endm draw_rect_trans
+;-------------
 ;if row + column is even then background color1 (color of first square) else color2
 check_square_color MACRO row,column ;if color1 then return al=0 else 1
 local even_place,end_check
@@ -103,6 +130,10 @@ square_info LABEL BYTE
     db 0
     db 0
     db 0
+;--------------- draw_rect_trans macro variables
+    sq_background db ?;;;;;;;;;;;;;;;;;;;;
+    w_counter db ?
+    l_counter db ?
 ;-------------------pieces--------------
 ;king ,wazer ,tabia , horse ,soldier ,fel
     piece_x_end dw ?
@@ -407,7 +438,7 @@ main proc far
     call initialize_pieces
 
     mov di,0
-    ;draw_rect sel_color
+    draw_rect_trans sel_color
     continue_label:
     
     push ax 
@@ -547,7 +578,7 @@ Navigate proc
     add di,ax
 
     push di
-    draw_rect color1
+    draw_rect_trans color1
     mov al,color1
     mov bl,color2
     xchg al,bl
@@ -562,7 +593,9 @@ Navigate proc
     cmp direction,2
     jz go_left
     cmp direction,3
-    jz go_up
+    jnz skip12 
+    jmp go_up
+    skip12:
     cmp direction,4
     jz l_go_down
     ;;;;;;;;;;;;;;;;;;;;;;
@@ -575,7 +608,7 @@ Navigate proc
     inc sq_cursor_h
     add di,40d;next columnin same row
     push di
-    draw_rect sel_color
+    draw_rect_trans sel_color
     pop di
     jump:jmp end_nav
     l_go_down: jmp go_down
@@ -588,7 +621,7 @@ Navigate proc
     dec sq_cursor_h
     sub di,40d
     push di
-    draw_rect sel_color
+    draw_rect_trans sel_color
     pop di
     jmp end_nav
     ;;;;;;;;;;;;;;;;;;;;;;;;
@@ -600,7 +633,7 @@ Navigate proc
     dec sq_cursor_v
     sub di,6400d
     push di
-    draw_rect sel_color
+    draw_rect_trans sel_color
     pop di
     jmp end_nav
     ;;;;;;;;;;;;;;;;;;;;;;;;
@@ -613,7 +646,7 @@ Navigate proc
     inc sq_cursor_v
     add di,6400d
     push di
-    draw_rect sel_color
+    draw_rect_trans sel_color
     pop di
     end_nav:
     ret
