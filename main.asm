@@ -98,7 +98,7 @@ end_check:
     jmp end_check
 endm check_square_color
 ;------------
-draw_rectangle macro x_rect,y_rect,a
+draw_rectangle macro x_rect,y_rect,color_rect
 local l11,l22,skip_me
 
     mov ax,20d
@@ -143,8 +143,75 @@ local l11,l22,skip_me
     jne l11
   endm draw_rectangle
 ;------------
+feeel macro x_fel,y_fel
+local l1,l2,l3,l4,exit1,exit2,exit3,exit4
 
+    mov al,x_fel
+    mov x_new,al
+    mov ah,y_fel
+    mov y_new,ah
 
+    l1:
+        inc x_new
+        inc y_new
+        cmp x_new,8
+        je exit1
+        cmp y_new,8
+        je exit1
+          draw_rectangle x_new,y_new,55;55 is the highlight color
+    jmp l1
+exit1:
+
+    mov al,x_fel
+    mov x_new,al
+    mov ah,y_fel
+    mov y_new,ah
+
+    l2:
+        dec x_new
+        inc y_new
+        cmp x_new,-1
+        je exit2
+        cmp y_new,8
+        je exit2
+          draw_rectangle x_new,y_new,55;55 is the highlight color
+    jmp l2
+exit2:
+
+    mov al,x_fel
+    mov x_new,al
+    mov ah,y_fel
+    mov y_new,ah
+
+    l3:
+        dec x_new
+        dec y_new
+        cmp x_new,-1
+        je exit3
+        cmp y_new,-1
+        je exit3
+          draw_rectangle x_new,y_new,55;55 is the highlight color
+    jmp l3
+exit3:
+
+    mov al,x_fel
+    mov x_new,al
+    mov ah,y_fel
+    mov y_new,ah
+
+    l4:
+        inc x_new
+        dec y_new
+        cmp x_new,8
+        je exit4
+        cmp y_new,-1
+        je exit4
+          draw_rectangle x_new,y_new,55;55 is the highlight color
+    jmp l4
+exit4:
+
+endm feeel
+;------------
 .model small
 .stack 64
 .data
@@ -192,6 +259,11 @@ square_info LABEL BYTE
 ;--------ckeck selected piece---------;
 selected_piece_x db 0
 selected_piece_y db 0
+selected_piece db ? ;selected piece
+key db ? ;key pressed for logic
+;------------move piece---------------;
+x_new db 0 ;for fel macro
+y_new db 0
 ;-------------white pieces--------------;
 soldier db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,7,15,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,15,15,15,15,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
@@ -471,8 +543,7 @@ db 0,0,0,0,0,0,0,234,15,15,15,15,15,15,15,15,15,28,0,0,0,0,0,0,0
 db 0,0,0,0,0,0,0,15,15,15,15,15,15,15,15,15,15,38,0,0,0,0,0,0,0
 db 0,0,0,0,0,0,0,0,23,24,24,24,24,24,25,26,21,0,0,0,0,0,0,0,0
 ;-----------------
-key db ? ;key pressed
-;-----------------
+
 .code
 main proc far
     mov ax,@data
@@ -500,7 +571,7 @@ continue_label:
     call Navigate
     call ckeck_selected
 
-;mail loop of game,not to end game
+;main loop of game,not to end game
 cmp continue_counter,0
 jnz continue_label
 
@@ -583,13 +654,22 @@ draw_board endp
 ckeck_selected proc
 
     cmp key,'q'
-    jne skip37
+    je xcx
+    jmp skip37
+    xcx:
 
     mov al,sq_cursor_h
     mov selected_piece_x,al
     mov al,sq_cursor_v
     mov selected_piece_y,al
+
+    mov bl,8
+    mov al,selected_piece_y
+    mul bl;al=y*8
+    add al,selected_piece_x
+    mov selected_piece,al
         draw_rectangle selected_piece_x,selected_piece_y,11
+        feeel selected_piece_x,selected_piece_y
     skip37:
 
 ret
@@ -733,5 +813,8 @@ Navigate proc
     end_nav:
     ret
 Navigate endp
+;-----------------
 
+
+;-----------------
 end main
