@@ -54,7 +54,34 @@ cmp bx,piece_y_end
 jne l1
 
 endm draw_piece
-;-----------
+;-------------
+draw_rect_trans MACRO color
+    local l1,l2,l3,end
+        mov dx,di
+        mov bl,es:[di]
+        mov w_counter,40
+        mov l_counter,20
+        mov al,color
+        l1: cmp es:[di],bl
+            jnz l2
+            
+            mov cx,1
+            rep stosb
+            
+        l3: dec w_counter
+            jnz l1
+            mov w_counter,40
+            add dx,320
+            mov di,dx
+            dec l_counter
+            jnz l1
+            jmp end
+            
+            l2: inc di
+            jmp l3
+      end:           
+endm draw_rect_trans
+;-------------
 ;if row + column is even then background color1 (color of first square) else color2
 check_square_color MACRO row,column ;if color1 then return al=0 else 1
 local even_place,end_check
@@ -74,6 +101,7 @@ endm check_square_color
 .model small
 .stack 64
 .data
+
 start    dw 0    ;position of the starting point(pixel)
 w       dw 40   ;width of the square
 len     dw 20   ; length (height) of each row of squares
@@ -91,8 +119,6 @@ sq_cursor_h db 0; horizontal
 sq_cursor_v db 0; vertical
 step_size_row db 40; to traverse in a row
 step_size_col dw 6400d; to traverse in a column
-draw_start_width db 15
-draw_start_height db 8
 direction db 0
 square_info LABEL BYTE
     ;first row
@@ -104,6 +130,10 @@ square_info LABEL BYTE
     db 0
     db 0
     db 0
+;--------------- draw_rect_trans macro variables
+    sq_background db ?;;;;;;;;;;;;;;;;;;;;
+    w_counter db ?
+    l_counter db ?
 ;-------------------pieces--------------
 ;king ,wazer ,tabia , horse ,soldier ,fel
     piece_x_end dw ?
@@ -408,11 +438,11 @@ main proc far
     call initialize_pieces
 
     mov di,0
-    ;draw_rect sel_color
+    draw_rect_trans sel_color
     continue_label:
     
     push ax 
-    ;call Navigate
+    call Navigate
     pop ax  
     cmp continue_counter,0  
     jnz continue_label
@@ -490,70 +520,9 @@ draw_board proc
     
     ret
 draw_board endp
-
-Draw_Tabia proc
-        mov dx,di
-        mov ah,3
-        mov bh,3
-        dots:;;3 dots
-        mov al,0fh
-        mov cx,3
-        rep STOSB
-        add di,3
-        dec ah
-        jnz dots 
-        
-        add dx,320
-        mov di,dx
-        sub dx,320
-        mov ah,3
-        dec bh
-        jnz dots
-        
-        
-        mov bh,2
-         
-        
-        add dx,320
-        add dx,320
-        ;add dx,320
-        ;add dx,320
-        mov di,dx
-        rect:;;rect
-        mov cx,15
-        rep STOSB
-        add dx,320
-        mov di,dx
-        dec bh
-        jnz rect
-        
-        
-        add dx,321
-        
-        mov bh,3
-        stickk: ;3amood
-        mov di,dx
-        mov cx,13 
-        rep STOSB
-        add dx,320
-        dec bh
-        jnz stickk
-        
-        mov bh,2
-        add dx,319
-        mov di,dx
-        rect_ta7t:;;rect
-        mov cx,15
-        rep STOSB
-        add dx,320
-        mov di,dx
-        dec bh
-        jnz rect_ta7t
-
-        ret
-Draw_Tabia endp
+;-----------------
 Navigate proc
-
+    ;wait for user input
     mov ah,0
     int 16h ;w=up,s=down,a=left,d=right
     ;if al == ascii of any of these letters
@@ -567,18 +536,18 @@ Navigate proc
     jz cond_go_up
     cmp al,'s'
     jz cond_l_go_down
-    
+
     exitt: ret
 
     cond_go_right:
     mov direction,1
-    cmp sq_cursor_h,7
+    cmp sq_cursor_h,7;check if cursor is at the end of the row
     jz exitt
     jmp start_nav
 
     cond_go_left:
     mov direction,2
-    cmp sq_cursor_h,0 
+    cmp sq_cursor_h,0
     jz exitt
     jmp start_nav
 
@@ -594,22 +563,22 @@ Navigate proc
     jz exitt
     jmp start_nav
 
-    
+
     start_nav:
     push ax
 
     mov ax,0
     mov al,sq_cursor_h
-    mul step_size_row
+    mul step_size_row ;ax = sq_cursor_h * step_size_row"40"
     mov di,ax
 
     mov ax,0
     mov al,sq_cursor_v
-    mul step_size_col
+    mul step_size_col;ax = sq_cursor_v * step_size_col"6400"
     add di,ax
 
     push di
-    draw_rect color1
+    draw_rect_trans color1
     mov al,color1
     mov bl,color2
     xchg al,bl
@@ -617,14 +586,16 @@ Navigate proc
     mov color2,bl
     pop di
 
-    
+
     pop ax
     cmp direction,1;;read ascii of 'd' from al
     jz go_right
     cmp direction,2
     jz go_left
     cmp direction,3
-    jz go_up
+    jnz skip12 
+    jmp go_up
+    skip12:
     cmp direction,4
     jz l_go_down
     ;;;;;;;;;;;;;;;;;;;;;;
@@ -635,9 +606,9 @@ Navigate proc
     inc global_cursor
 
     inc sq_cursor_h
-    add di,40d
+    add di,40d;next columnin same row
     push di
-    draw_rect sel_color
+    draw_rect_trans sel_color
     pop di
     jump:jmp end_nav
     l_go_down: jmp go_down
@@ -650,7 +621,7 @@ Navigate proc
     dec sq_cursor_h
     sub di,40d
     push di
-    draw_rect sel_color
+    draw_rect_trans sel_color
     pop di
     jmp end_nav
     ;;;;;;;;;;;;;;;;;;;;;;;;
@@ -662,7 +633,7 @@ Navigate proc
     dec sq_cursor_v
     sub di,6400d
     push di
-    draw_rect sel_color
+    draw_rect_trans sel_color
     pop di
     jmp end_nav
     ;;;;;;;;;;;;;;;;;;;;;;;;
@@ -675,9 +646,10 @@ Navigate proc
     inc sq_cursor_v
     add di,6400d
     push di
-    draw_rect sel_color
+    draw_rect_trans sel_color
     pop di
     end_nav:
     ret
 Navigate endp
+
 end main
