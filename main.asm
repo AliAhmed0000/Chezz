@@ -54,47 +54,6 @@ cmp bx,piece_y_end
 jne l1
 
 endm draw_piece
-;------------
-draw_piece2 MACRO piece,x_piece,y_piece
-local l1,l2,skip_draw
-
-mov si,offset piece
-mov al,piece           ;just for storing the piece in piece_background
-mov piece_background,al;to know background color of piece
-mov ax,25
-mov bx,y_piece
-mul bx  ; ax = y * 20
-mov bx,ax
-mov piece_y_end,bx
-add piece_y_end,25
-l1:
-    mov ax,25
-    mov di,x_piece
-    mul di ;ax = x * 40
-    mov di,ax
-    mov piece_x_end,di
-    add piece_x_end,25 ;40d
-    l2:
-            mov cx,di;column
-
-            mov dx,bx;row
-            mov ax,[si]
-            mov ah,0ch  ;draw pixel
-            cmp piece_background,al
-            je skip_draw
-            int 10h
-        skip_draw:
-
-            inc si
-
-      inc di
-      cmp di,piece_x_end
-      jne l2
-inc bx
-cmp bx,piece_y_end
-jne l1
-
-endm draw_piece2
 ;-----------
 ;if row + column is even then background color1 (color of first square) else color2
 check_square_color MACRO row,column ;if color1 then return al=0 else 1
@@ -446,7 +405,26 @@ main proc far
     mov no_sqs,8
     call draw_board
 
+    call initialize_pieces
 
+    mov di,0
+    ;draw_rect sel_color
+    continue_label:
+    
+    push ax 
+    ;call Navigate
+    pop ax  
+    cmp continue_counter,0  
+    jnz continue_label
+
+    mov       ah, 4ch
+    mov       al, 01h
+    int       21h
+    
+    hlt
+main endp
+;-----------------
+initialize_pieces proc
     ;draw all pieces using draw_piece x,y
     ;draw white pieces
     draw_piece tabia,0,0
@@ -483,42 +461,8 @@ main proc far
     draw_piece b_soldier,5,6
     draw_piece b_soldier,6,6
     draw_piece b_soldier,7,6
-
-
-
-    ;draw_pieces--------
-    ;   draw_piece fel,7,0
-    ;   draw_piece tabia,6,0
-    ;   draw_piece king,5,0
-    ;   draw_piece horse,4,0
-    ;   draw_piece wazer,3,0
-    ;   draw_piece soldier,2,0
-    ;   draw_piece b_fel,7,1
-    ;   draw_piece b_tabia,6,1
-    ;   draw_piece b_king,5,1
-    ;   draw_piece b_horse,4,1
-    ;   draw_piece b_wazer,3,1
-    ;   draw_piece b_soldier,2,1
-      ;-----------
-      ;draw_piece2 test,2,4
-
-    mov di,0
-    ;draw_rect sel_color
-    continue_label:
-    
-    push ax 
-    ;call Navigate
-    pop ax  
-    cmp continue_counter,0  
-    jnz continue_label
-
-    mov       ah, 4ch
-    mov       al, 01h
-    int       21h
-    
-    hlt
-main endp
-;-----------------
+ret
+initialize_pieces endp
 draw_board proc 
     row_l1:
     push di
