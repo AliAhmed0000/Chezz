@@ -118,47 +118,6 @@ cmp bx,piece_y_end
 jne l1
 
 endm draw_piece
-;------------
-draw_piece2 MACRO piece,x_piece,y_piece
-local l1,l2,skip_draw
-
-mov si,offset piece
-mov al,piece           ;just for storing the piece in piece_background
-mov piece_background,al;to know background color of piece
-mov ax,25
-mov bx,y_piece
-mul bx  ; ax = y * 20
-mov bx,ax
-mov piece_y_end,bx
-add piece_y_end,25
-l1:
-    mov ax,25
-    mov di,x_piece
-    mul di ;ax = x * 40
-    mov di,ax
-    mov piece_x_end,di
-    add piece_x_end,25 ;40d
-    l2:
-            mov cx,di;column
-
-            mov dx,bx;row
-            mov ax,[si]
-            mov ah,0ch  ;draw pixel
-            cmp piece_background,al
-            je skip_draw
-            int 10h
-        skip_draw:
-
-            inc si
-
-      inc di
-      cmp di,piece_x_end
-      jne l2
-inc bx
-cmp bx,piece_y_end
-jne l1
-
-endm draw_piece2
 ;-----------
 ;if row + column is even then background color1 (color of first square) else color2
 check_square_color MACRO row,column ;if color1 then return al=0 else 1

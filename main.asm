@@ -507,7 +507,7 @@ main proc far
     continue_label:
     
     push ax 
-    ;call Navigate
+    call Navigate
     pop ax  
     cmp continue_counter,0  
     jnz continue_label
