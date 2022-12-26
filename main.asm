@@ -865,7 +865,17 @@ color_is_1:
     draw_rectangle_not_trans selected_piece_x,selected_piece_y,color1
     ;draw_piece horse,sq_cursor_h,sq_cursor_v
     call draw_piece_by_type
+;update squares_container---
+    mov bh,0
+    mov bl,desired_position
+    mov si,bx                       ;si = desired_position
+    mov bl,selected_piece_position ;bx = selected_piece_position
 
+    mov squares_container[bx],'0'
+    mov al,selected_piece_type
+    mov squares_container[si],al
+;------------------------
+    ;desired_position,selected_piece_position
     ;reset board to un highlighted
     push di
     mov di,0
@@ -877,7 +887,16 @@ color_is_2:
     draw_rectangle_not_trans selected_piece_x,selected_piece_y,color2
     ;draw_piece horse,sq_cursor_h,sq_cursor_v
     call draw_piece_by_type
+;update squares_container---
+    mov bh,0
+    mov bl,desired_position
+    mov si,bx                       ;si = desired_position
+    mov bl,selected_piece_position ;bx = selected_piece_position
 
+    mov squares_container[bx],'0'
+    mov al,selected_piece_type
+    mov squares_container[si],al
+;------
     ;reset board to un highlighted
     push di
     mov di,0
@@ -1082,6 +1101,7 @@ wazerr proc
         je exit12
         cmp y_new,8
         je exit12
+                  set_place_available x_new,y_new
           draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
     jmp l12
 exit12:
@@ -1098,6 +1118,7 @@ exit12:
         je exit13
         cmp y_new,-1
         je exit13
+                  set_place_available x_new,y_new
           draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
     jmp l13
 exit13:
@@ -1114,6 +1135,7 @@ exit13:
         je exit14
         cmp y_new,-1
         je exit14
+                  set_place_available x_new,y_new
           draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
     jmp l14
 exit14:
@@ -1130,6 +1152,7 @@ exit14:
         je exit15
         cmp y_new,8
         je exit15
+                  set_place_available x_new,y_new
           draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
     jmp l15
 exit15:
@@ -1143,6 +1166,7 @@ exit15:
         inc x_new
         cmp x_new,8
         je exit16
+                  set_place_available x_new,y_new
           draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
     jmp l16
 exit16:
@@ -1156,6 +1180,7 @@ exit16:
         dec x_new
         cmp x_new,-1
         je exit17
+                  set_place_available x_new,y_new
           draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
     jmp l17
 exit17:
@@ -1169,6 +1194,7 @@ exit17:
         inc y_new
         cmp y_new,8
         je exit18
+                  set_place_available x_new,y_new
           draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
     jmp l18
 exit18:
@@ -1182,6 +1208,7 @@ exit18:
         dec y_new
         cmp y_new,-1
         je exit19
+                  set_place_available x_new,y_new
           draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
     jmp l19
 exit19:
