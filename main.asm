@@ -319,6 +319,7 @@ square_info LABEL BYTE
  selected_pos_color db 7
  key db ? ;key pressed for logic
  selected_piece_type db ? ;type of piece
+ desired_position db ?
 ;------------move piece---------------;
  x_new db 0
  y_new db 0
@@ -835,13 +836,23 @@ notq:
     je can_moveee
     jmp can_not_movee;not equal 1 don't move
 can_moveee:
-    reset_available_places;;;;;;;;;;;;;;;;;;;;;;
+    reset_available_places
     ;know which piece to draw
     ;mov selected_piece_type,squares_container[selected_piece_position]
     mov bl,selected_piece_position
     mov bh,0
     mov cl,squares_container[bx]
     mov selected_piece_type,cl
+
+    ;check if it is white or black------------------------------------
+    mov bl,8
+    mov al,sq_cursor_v
+    mul bl;al=y*8
+    add al,sq_cursor_h
+    mov desired_position,al
+
+
+;-------------------------------------------------------
     ;move piece to new position
     ;call move_piece
     check_square_color sq_cursor_h,sq_cursor_v ;al=0 if color1
