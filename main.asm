@@ -318,6 +318,7 @@ square_info LABEL BYTE
  selected_piece_position db ? ;selected piece
  selected_pos_color db 7
  key db ? ;key pressed for logic
+ selected_piece_type db ? ;type of piece
 ;------------move piece---------------;
  x_new db 0
  y_new db 0
@@ -591,6 +592,19 @@ square_info LABEL BYTE
   db 15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,8,8,8,8,8,8,8,8,8,8,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15
   ;-----------
 
+
+;---------array which piece in the square-----;
+ ;small letters are white pieces and big letters are black pieces
+ squares_container db "thfwkfht"
+ db 8 dup('s')
+ db 8 dup('0')
+ db 8 dup('0')
+ db 8 dup('0')
+ db 8 dup('0')
+ db 8 dup('S')
+ db "THFWKFHT"
+
+
 .code
 main proc far
     mov ax,@data
@@ -724,7 +738,7 @@ ckeck_selected proc
         ;feeel selected_piece_x,selected_piece_y
         ;kingg selected_piece_x,selected_piece_y
         ;tabiaa selected_piece_x,selected_piece_y
-        ;call wazerr,horsee,feeel,kingg
+        ;call wazerr,horsee,feeel,kingg 7sb ay piece selected;;;;;;;;;;;;;;;;;;
         call tabiaa
 
     notq:
@@ -740,6 +754,12 @@ ckeck_selected proc
     jmp can_not_movee;not equal 1 don't move
 can_moveee:
     reset_available_places;;;;;;;;;;;;;;;;;;;;;;
+    ;know which piece to draw
+    ;mov selected_piece_type,squares_container[selected_piece_position]
+    mov bl,selected_piece_position
+    mov bh,0
+    mov cl,squares_container[bx]
+    mov selected_piece_type,cl
     ;move piece to new position
     ;call move_piece
     check_square_color sq_cursor_h,sq_cursor_v ;al=0 if color1
@@ -751,10 +771,13 @@ color_is_1:
     ;color is 1
     draw_rectangle_not_trans selected_piece_x,selected_piece_y,color1
 ;now you must know which piece to draw
-    draw_piece horse,sq_cursor_h,sq_cursor_v
+
+    ;draw_piece horse,sq_cursor_h,sq_cursor_v
+    call draw_piece_by_type
     jmp color_is_1_and_drawn
 color_is_2:
-    draw_rectangle_not_trans selected_piece_x,selected_piece_y,color2
+    ;draw_rectangle_not_trans selected_piece_x,selected_piece_y,color2
+    call draw_piece_by_type
     draw_piece horse,sq_cursor_h,sq_cursor_v
 
 color_is_1_and_drawn:
@@ -1450,5 +1473,98 @@ exit466:
 
 ret
 tabiaa endp
+;------------
+draw_piece_by_type proc
+
+cmp selected_piece_type,'t'
+jne not_tabiaa
+    mov si,offset tabia
+not_tabiaa:
+cmp selected_piece_type,'h'
+jne not_horse
+    mov si,offset horse
+not_horse:
+cmp selected_piece_type,'f'
+jne not_fel
+    mov si,offset fel
+not_fel:
+cmp selected_piece_type,'w'
+jne not_wazer
+    mov si,offset wazer
+not_wazer:
+cmp selected_piece_type,'k'
+jne not_king
+    mov si,offset king
+not_king:
+cmp selected_piece_type,'s'
+jne not_soldier
+    mov si,offset soldier
+not_soldier:
+;------------
+cmp selected_piece_type,'T'
+jne not_b_tabiaa
+    mov si,offset b_tabia
+not_b_tabiaa:
+cmp selected_piece_type,'H'
+jne not_b_horse
+    mov si,offset b_horse
+not_b_horse:
+cmp selected_piece_type,'F'
+jne not_b_fel
+    mov si,offset b_fel
+not_b_fel:
+cmp selected_piece_type,'W'
+jne not_b_wazer
+    mov si,offset b_wazer
+not_b_wazer:
+cmp selected_piece_type,'K'
+jne not_b_king
+    mov si,offset b_king
+not_b_king:
+cmp selected_piece_type,'S'
+jne not_b_soldier
+    mov si,offset b_soldier
+not_b_soldier:
+
+mov al,[si]           ;just for storing the piece in piece_background by first pixel
+mov piece_background,al;to know background color of piece
+mov ax,20d
+mov bl,selected_piece_y
+mov bh,0
+mul bx  ; ax = y * 20
+mov bx,ax
+mov piece_y_end,bx
+add piece_y_end,20d
+l167:
+    mov al,selected_piece_x
+    mov ah,0
+    mov di,ax
+    mov ax,40d
+    mul di ;ax = x * 40
+    mov di,ax
+    mov piece_x_end,di
+    add piece_x_end,40d ;40d
+    l267:
+            mov cx,di;column
+
+            mov dx,bx;row
+            mov ax,[si]
+            mov ah,0ch  ;draw pixel
+            cmp piece_background,al
+            je skip_draww
+            int 10h
+        skip_draww:
+
+            inc si
+
+      inc di
+      cmp di,piece_x_end
+      jne l267
+inc bx
+cmp bx,piece_y_end
+jne l167
+
+ret
+draw_piece_by_type endp
 ;------------
 end main
