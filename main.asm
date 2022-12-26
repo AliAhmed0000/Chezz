@@ -11,10 +11,6 @@ local l1
         jnz l1
 endm draw_rect
 ;-------------
-exchange_values MACRO c1,c2
-
-endm exchange_values
-;-------------
 draw_piece MACRO piece,x_piece,y_piece
 local l1,l2,skip_draw
 
@@ -86,16 +82,15 @@ endm draw_rect_trans
 ;if row + column is even then background color1 (color of first square) else color2
 check_square_color MACRO row,column ;if color1 then return al=0 else 1
 local even_place,end_check
-    mov ax,row
-    add ax,column
-    and ax,1        ;if last bit is 1 then odd else even
+    mov al,row
+    add al,column
+    and al,1        ;if last bit is 1 then odd else even
     jz even_place   ;even
     mov al,1 ;odd
     jmp end_check
 even_place:
     mov al,0 ;even
 end_check:
-    jmp end_check
 endm check_square_color
 ;------------draw_rectangle don't draw on existing pixels
 draw_rectangle macro x_rect,y_rect,color_rect
@@ -143,13 +138,67 @@ local l11,l22,skip_me
     jne l11
   endm draw_rectangle
 ;------------
-get_0to64_from_xy MACRO x,y
+get_0to64_from_xy MACRO x_07,y_07 ; result"bl" = from 0 to 64
     mov bl,8
-    mov al,y
+    mov al,y_07
     mul bl;al=y*8
-    add al,x
-    mov bl,al
+    add al,x_07
+    mov bl,al   ;bl = from 0 to 64
 endm get_0to64_from_xy
+;------------
+set_place_available MACRO x_place,y_place
+    ;get_0to64_from_xy x_place,y_place
+    mov bl,8
+    mov al,y_place
+    mul bl;al=y*8
+    add al,x_place
+    mov bl,al   ;bl = from 0 to 64
+    mov bh,0
+    mov available_places[bx],1
+endm set_place_available
+;------------
+reset_available_places MACRO
+local loop44
+    mov cx,64
+    mov bx,0
+loop44:
+    mov available_places[bx],0
+    inc bx
+loop loop44
+endm reset_available_places
+;------------
+can_move_or_not MACRO x_move,y_move;al=0 if can't move if can move 1
+local can_not_move
+    mov bl,8
+    mov al,y_move
+    mul bl;al=y*8
+    add al,x_move
+    mov bl,al   ;bl = from 0 to 64
+    mov bh,0
+
+    mov al,0 ;set al to 0 "can not move"
+    cmp available_places[bx],1
+    jnz can_not_move
+    mov al,1
+can_not_move:
+endm can_move_or_not
+;------------
+;bwlow is incorrect
+move_piece macro x_move_new,y_move_new
+local even_place,end_check
+;old locations of piece = selected_piece_x,y
+    mov al,selected_piece_x
+    add al,selected_piece_y
+    and al,1        ;if last bit is 1 then odd else even
+    jz even_place   ;even
+    mov al,1 ;odd
+    jmp end_check
+even_place:
+    mov al,0 ;even
+end_check:
+;al=0 even draw color 1 in old position
+; al =1 odd draw color 1 in old position
+endm move_piece
 ;------------
 time macro
 mov ah,2ch
@@ -171,7 +220,7 @@ local l1,l2,l3,l4,exit1,exit2,exit3,exit4
         je exit1
         cmp y_new,8
         je exit1
-          draw_rectangle x_new,y_new,55;55 is the highlight color
+          draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
     jmp l1
 exit1:
 
@@ -187,7 +236,7 @@ exit1:
         je exit2
         cmp y_new,8
         je exit2
-          draw_rectangle x_new,y_new,55;55 is the highlight color
+          draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
     jmp l2
 exit2:
 
@@ -203,7 +252,7 @@ exit2:
         je exit3
         cmp y_new,-1
         je exit3
-          draw_rectangle x_new,y_new,55;55 is the highlight color
+          draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
     jmp l3
 exit3:
 
@@ -219,7 +268,7 @@ exit3:
         je exit4
         cmp y_new,-1
         je exit4
-          draw_rectangle x_new,y_new,55;55 is the highlight color
+          draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
     jmp l4
 exit4:
 
@@ -235,7 +284,7 @@ mov y_new,ah
 inc x_new
 cmp x_new,8
 je next1
-draw_rectangle x_new,y_new,55
+draw_rectangle x_new,y_new,color_avilable_moves
 next1:
 
 mov al,x_king
@@ -246,7 +295,7 @@ mov y_new,ah
 dec x_new
 cmp x_new,-1
 je next2
-draw_rectangle x_new,y_new,55
+draw_rectangle x_new,y_new,color_avilable_moves
 next2:
 
 mov al,x_king
@@ -257,7 +306,7 @@ mov y_new,ah
 inc y_new
 cmp y_new,8
 je next3
-draw_rectangle x_new,y_new,55
+draw_rectangle x_new,y_new,color_avilable_moves
 next3:
 
 mov al,x_king
@@ -268,7 +317,7 @@ mov y_new,ah
 dec y_new
 cmp y_new,-1
 je next4
-draw_rectangle x_new,y_new,55
+draw_rectangle x_new,y_new,color_avilable_moves
 next4:
 
 mov al,x_king
@@ -282,7 +331,7 @@ cmp x_new,8
 je next5
 cmp y_new,8
 je next5
-draw_rectangle x_new,y_new,55
+draw_rectangle x_new,y_new,color_avilable_moves
 next5:
 
 mov al,x_king
@@ -296,7 +345,7 @@ cmp x_new,-1
 je next6
 cmp y_new,8
 je next6
-draw_rectangle x_new,y_new,55
+draw_rectangle x_new,y_new,color_avilable_moves
 next6:
 
 mov al,x_king
@@ -310,7 +359,7 @@ cmp x_new,-1
 je next7
 cmp y_new,-1
 je next7
-draw_rectangle x_new,y_new,55
+draw_rectangle x_new,y_new,color_avilable_moves
 next7:
 
 mov al,x_king
@@ -324,7 +373,7 @@ cmp x_new,8
 je next8
 cmp y_new,-1
 je next8
-draw_rectangle x_new,y_new,55
+draw_rectangle x_new,y_new,color_avilable_moves
 next8:
 endm kingg
 ;------------
@@ -340,7 +389,7 @@ local l1,l2,l3,l4,exit1,exit2,exit3,exit4
         inc x_new
         cmp x_new,8
         je exit1
-          draw_rectangle x_new,y_new,55;55 is the highlight color
+          draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
     jmp l1
 exit1:
 
@@ -353,7 +402,7 @@ exit1:
         dec x_new
         cmp x_new,-1
         je exit2
-          draw_rectangle x_new,y_new,55;55 is the highlight color
+          draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
     jmp l2
 exit2:
 
@@ -366,7 +415,7 @@ exit2:
         inc y_new
         cmp y_new,8
         je exit3
-          draw_rectangle x_new,y_new,55;55 is the highlight color
+          draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
     jmp l3
 exit3:
 
@@ -379,10 +428,30 @@ exit3:
         dec y_new
         cmp y_new,-1
         je exit4
-          draw_rectangle x_new,y_new,55;55 is the highlight color
+          draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
     jmp l4
 exit4:
 endm tabiaa
+;------------
+get_rectcolor_by_xy macro
+    ;get row from 0-7 to 0-199
+    mov ax,20d
+    mov bl,y_rect_avilable
+    mov bh,0
+    mul bx  ; ax = y * 20
+    mov bx,ax
+    ;get column from 0-7 to 0-319
+    mov ax,40d
+    mov cl,x_rect_avilable
+    mov ch,0
+    mul cx  ; ax = x * 40
+    mov cx,ax
+            ;get color of existing pixels
+            mov ah,0Dh
+            mov cx,dx;column
+            mov dx,bx;row
+            int 10H     ; AL = COLOR of exisiting pixel
+endm get_rectcolor_by_xy
 ;------------
 .model small
 .stack 64
@@ -429,7 +498,7 @@ square_info LABEL BYTE
     rect_x_end dw ?
     rect_y_end dw ?
 ;--------ckeck selected piece---------;
-selected_piece_x db 0
+selected_piece_x db 0 ;selected piece x i want to move
 selected_piece_y db 0
 selected_piece db ? ;selected piece
 key db ? ;key pressed for logic
@@ -438,6 +507,19 @@ x_new db 0
 y_new db 0
 current_x db 0
 current_y db 0
+color_avilable_moves db 55
+;------------get_rectcolor_by_xy------;
+x_rect_avilable db 0
+y_rect_avilable db 0
+;------------available_places-----------;
+available_places db 0,0,0,0,0,0,0,0
+db 0,0,0,0,0,0,0,0
+db 0,0,0,0,0,0,0,0
+db 0,0,0,0,0,0,0,0
+db 0,0,0,0,0,0,0,0
+db 0,0,0,0,0,0,0,0
+db 0,0,0,0,0,0,0,0
+db 0,0,0,0,0,0,0,0
 ;-------------white pieces--------------;
 soldier db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,7,15,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,15,15,15,15,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
@@ -829,7 +911,7 @@ ckeck_selected proc
 
     cmp key,'q'
     je xcx
-    jmp skip37
+    jmp notq
     xcx:
 
     mov al,sq_cursor_h
@@ -852,7 +934,37 @@ ckeck_selected proc
         mov current_y,al
         ;call wazerr
         call horsee
-    skip37:
+    notq:
+    ;check if want to move "m key pressed"
+    cmp key,'m'
+    je xcxpp
+    jmp notm
+    xcxpp:;key is m check if can move to new position
+    can_move_or_not sq_cursor_h,sq_cursor_v  ;al=1 if can move
+    cmp al,1
+    ;jne can_not_movee ;0 can't move
+    je can_moveee
+    jmp can_not_movee;not equal 1 don't move
+can_moveee:
+    ;move piece to new position
+    ;call move_piece
+    check_square_color sq_cursor_h,sq_cursor_v ;al=0 if color1
+    cmp al,0
+    ;jne color_is_2 ;1 if color2
+    je color_is_1
+    jmp color_is_2
+color_is_1:
+    ;color is 1
+    draw_rectangle sq_cursor_h,sq_cursor_v,color1
+;now you must know which piece to draw
+    draw_piece horse,sq_cursor_h,sq_cursor_v;;;;;;;;;;;;;;;;;;;;;;;;;;x,y of pieceis words sadly
+    jmp color_is_1_and_drawn
+color_is_2:
+    draw_rectangle sq_cursor_h,sq_cursor_v,color2
+
+color_is_1_and_drawn:
+can_not_movee:
+notm:
 
 ret
 ckeck_selected endp
@@ -1009,7 +1121,7 @@ wazerr proc
         je exit12
         cmp y_new,8
         je exit12
-          draw_rectangle x_new,y_new,55;55 is the highlight color
+          draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
     jmp l12
 exit12:
 
@@ -1025,7 +1137,7 @@ exit12:
         je exit13
         cmp y_new,-1
         je exit13
-          draw_rectangle x_new,y_new,55;55 is the highlight color
+          draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
     jmp l13
 exit13:
 
@@ -1041,7 +1153,7 @@ exit13:
         je exit14
         cmp y_new,-1
         je exit14
-          draw_rectangle x_new,y_new,55;55 is the highlight color
+          draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
     jmp l14
 exit14:
 
@@ -1057,7 +1169,7 @@ exit14:
         je exit15
         cmp y_new,8
         je exit15
-          draw_rectangle x_new,y_new,55;55 is the highlight color
+          draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
     jmp l15
 exit15:
 
@@ -1070,7 +1182,7 @@ exit15:
         inc x_new
         cmp x_new,8
         je exit16
-          draw_rectangle x_new,y_new,55;55 is the highlight color
+          draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
     jmp l16
 exit16:
 
@@ -1083,7 +1195,7 @@ exit16:
         dec x_new
         cmp x_new,-1
         je exit17
-          draw_rectangle x_new,y_new,55;55 is the highlight color
+          draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
     jmp l17
 exit17:
 
@@ -1096,7 +1208,7 @@ exit17:
         inc y_new
         cmp y_new,8
         je exit18
-          draw_rectangle x_new,y_new,55;55 is the highlight color
+          draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
     jmp l18
 exit18:
 
@@ -1109,7 +1221,7 @@ exit18:
         dec y_new
         cmp y_new,-1
         je exit19
-          draw_rectangle x_new,y_new,55;55 is the highlight color
+          draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
     jmp l19
 exit19:
 
@@ -1131,7 +1243,8 @@ horsee proc
         je exit20
         cmp y_new,8
         je exit20
-          draw_rectangle x_new,y_new,55;55 is the highlight color
+          set_place_available x_new,y_new
+          draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
 exit20:
 
     mov al,current_x
@@ -1148,7 +1261,8 @@ exit20:
         je exit21
         cmp y_new,-1
         je exit21
-          draw_rectangle x_new,y_new,55;55 is the highlight color
+          set_place_available x_new,y_new
+          draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
 exit21:
 
     mov al,current_x
@@ -1165,7 +1279,8 @@ exit21:
         je exit22
         cmp y_new,-1
         JE exit22
-          draw_rectangle x_new,y_new,55;55 is the highlight color
+          set_place_available x_new,y_new
+          draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
 exit22:
 
     mov al,current_x
@@ -1182,7 +1297,8 @@ exit22:
         je exit23
         cmp y_new,8
         je exit23
-          draw_rectangle x_new,y_new,55;55 is the highlight color
+          set_place_available x_new,y_new
+          draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
 exit23:
 
     mov al,current_x
@@ -1199,7 +1315,8 @@ exit23:
         je exit24
         cmp y_new,8
         je exit24
-          draw_rectangle x_new,y_new,55;55 is the highlight color
+          set_place_available x_new,y_new
+          draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
 exit24:
 
     mov al,current_x
@@ -1216,7 +1333,8 @@ exit24:
         je exit25
         cmp y_new,8
         je exit25
-          draw_rectangle x_new,y_new,55;55 is the highlight color
+          set_place_available x_new,y_new
+          draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
 exit25:
 
     mov al,current_x
@@ -1226,15 +1344,16 @@ exit25:
 
         dec x_new
         cmp x_new,-1
-        je exit255
+        je exit2color_avilable_moves
         dec x_new
         dec y_new
         cmp x_new,-1
-        je exit255
+        je exit2color_avilable_moves
         cmp y_new,-1
-        je exit255
-          draw_rectangle x_new,y_new,55;55 is the highlight color
-exit255:
+        je exit2color_avilable_moves
+          set_place_available x_new,y_new
+          draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
+exit2color_avilable_moves:
 
     mov al,current_x
     mov x_new,al
@@ -1250,7 +1369,8 @@ exit255:
         je exit26
         cmp y_new,-1
         je exit26
-          draw_rectangle x_new,y_new,55;55 is the highlight color
+          set_place_available x_new,y_new
+          draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
 exit26:
 
 ret
