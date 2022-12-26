@@ -735,9 +735,7 @@ ckeck_selected proc
         mov current_x,al
         mov al,selected_piece_y
         mov current_y,al
-        ;feeel selected_piece_x,selected_piece_y
-        ;kingg selected_piece_x,selected_piece_y
-        ;tabiaa selected_piece_x,selected_piece_y
+
         ;call wazerr,horsee,feeel,kingg 7sb ay piece selected;;;;;;;;;;;;;;;;;;
         call tabiaa
 
