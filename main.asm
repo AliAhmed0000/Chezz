@@ -851,6 +851,39 @@ can_moveee:
     add al,sq_cursor_h
     mov desired_position,al
 
+    ;check if it is white or black------------------------------------
+    mov bl,8
+    mov al,sq_cursor_v
+    mul bl;al=y*8
+    add al,sq_cursor_h
+    mov desired_position,al
+;------CHECK WHITE OR BLACK TO PREVENT DRAW ON HIS PIECES---------
+    mov bl,desired_position
+    mov bh,0
+    cmp selected_piece_type,'a'
+    jae check_w
+    cmp selected_piece_type,'Z'
+    jbe check_b
+
+    check_w:
+    cmp squares_container[bx],'a'
+    jae can_not_movee11
+    jmp continue_moving
+
+    can_not_movee11:
+    ; ;reset board to un highlighted if me want wrong move
+    push di
+    mov di,0
+    call draw_board2
+    pop di
+    ret
+    check_b:
+    cmp squares_container[bx],'Z'
+    ja  continue_moving
+    cmp squares_container[bx],'0'
+    jnz can_not_movee11
+    jmp continue_moving
+    continue_moving:
 
 ;-------------------------------------------------------
     ;move piece to new position
@@ -942,7 +975,7 @@ Navigate proc
 
     exitt: ret
     ;-----------------------------------
- 
+
     cond_go_right:
     mov direction,1
     cmp sq_cursor_h,7;check if cursor is at the end of the row
