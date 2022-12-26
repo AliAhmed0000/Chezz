@@ -712,6 +712,37 @@ draw_board proc
     ret
 draw_board endp
 ;-----------------
+draw_board2 proc
+mov start,0
+mov no_rows,8
+mov no_sqs,8
+    row_l11:
+    push di
+    draw_rect_trans color1
+    pop di
+    add di,40
+    mov al,color1
+    mov bl,color2
+    xchg al,bl
+    mov color1,al
+    mov color2,bl
+    dec no_sqs
+    jnz row_l11
+    mov no_sqs,8
+    mov al,color1
+    mov bl,color2
+    xchg al,bl
+    mov color1,al
+    mov color2,bl
+    add start,6400
+    mov di,start
+    dec no_rows
+    jnz row_l11 
+
+    
+    ret
+draw_board2 endp
+;-----------------
 ckeck_selected proc
 ;hi man
     cmp key,'q'
@@ -736,10 +767,63 @@ ckeck_selected proc
         mov al,selected_piece_y
         mov current_y,al
 
+    mov bl,selected_piece_position
+    mov bh,0
+    mov cl,squares_container[bx]
+    mov selected_piece_type,cl
         ;call wazerr,horsee,feeel,kingg 7sb ay piece selected;;;;;;;;;;;;;;;;;;
-        call tabiaa
-
-    notq:
+    ;check which type of piece is selected
+        cmp selected_piece_type,'t'
+        jne not_tabiaa2
+            call tabiaa
+        not_tabiaa2:
+        cmp selected_piece_type,'h'
+        jne not_horse2
+            call horsee
+        not_horse2:
+        cmp selected_piece_type,'f'
+        jne not_fel2
+            call feeel
+        not_fel2:
+        cmp selected_piece_type,'w'
+        jne not_wazer2
+            call wazerr
+        not_wazer2:
+        cmp selected_piece_type,'k'
+        jne not_king2
+            call kingg
+        not_king2:
+        cmp selected_piece_type,'s'
+        jne not_soldier2
+            call soldierr
+        not_soldier2:
+        ;------------
+        cmp selected_piece_type,'T'
+        jne not_b_tabiaa2
+            call tabiaa
+        not_b_tabiaa2:
+        cmp selected_piece_type,'H'
+        jne not_b_horse2
+            call horsee
+        not_b_horse2:
+        cmp selected_piece_type,'F'
+        jne not_b_fel2
+            call feeel
+        not_b_fel2:
+        cmp selected_piece_type,'W'
+        jne not_b_wazer2
+            call wazerr
+        not_b_wazer2:
+        cmp selected_piece_type,'K'
+        jne not_b_king2
+            call kingg
+        not_b_king2:
+        cmp selected_piece_type,'S'
+        jne not_b_soldier2
+            call soldierr_b
+        not_b_soldier2:
+    ;------------
+notq:
     ;check if want to move "m key pressed"
     cmp key,'m'
     je xcxpp
@@ -770,14 +854,32 @@ color_is_1:
     draw_rectangle_not_trans selected_piece_x,selected_piece_y,color1
     ;draw_piece horse,sq_cursor_h,sq_cursor_v
     call draw_piece_by_type
+
+    ;reset board to un highlighted
+    push di
+    mov di,0
+    call draw_board2
+    pop di
+
     jmp color_is_1_and_drawn
 color_is_2:
     draw_rectangle_not_trans selected_piece_x,selected_piece_y,color2
     ;draw_piece horse,sq_cursor_h,sq_cursor_v
     call draw_piece_by_type
 
+    ;reset board to un highlighted
+    push di
+    mov di,0
+    call draw_board2
+    pop di
+
 color_is_1_and_drawn:
 can_not_movee:
+    ;reset board to un highlighted if me want wrong move
+    push di
+    mov di,0
+    call draw_board2
+    pop di
 notm:
 
 ret
@@ -1296,7 +1398,7 @@ exit4:
 
 ret
 feeel endp
-;------------
+;-----------------
 kingg proc
 
     mov al,current_x
@@ -1408,7 +1510,7 @@ kingg proc
     next8:
 ret
 kingg endp
-;------------
+;-----------------
 tabiaa proc
 
     mov al,current_x
@@ -1469,58 +1571,94 @@ exit466:
 
 ret
 tabiaa endp
-;------------
-draw_piece_by_type proc
+;-----------------
+soldierr proc
 
-cmp selected_piece_type,'t'
-jne not_tabiaa
-    mov si,offset tabia
-not_tabiaa:
-cmp selected_piece_type,'h'
-jne not_horse
-    mov si,offset horse
-not_horse:
-cmp selected_piece_type,'f'
-jne not_fel
-    mov si,offset fel
-not_fel:
-cmp selected_piece_type,'w'
-jne not_wazer
-    mov si,offset wazer
-not_wazer:
-cmp selected_piece_type,'k'
-jne not_king
-    mov si,offset king
-not_king:
-cmp selected_piece_type,'s'
-jne not_soldier
-    mov si,offset soldier
-not_soldier:
-;------------
-cmp selected_piece_type,'T'
-jne not_b_tabiaa
-    mov si,offset b_tabia
-not_b_tabiaa:
-cmp selected_piece_type,'H'
-jne not_b_horse
-    mov si,offset b_horse
-not_b_horse:
-cmp selected_piece_type,'F'
-jne not_b_fel
-    mov si,offset b_fel
-not_b_fel:
-cmp selected_piece_type,'W'
-jne not_b_wazer
-    mov si,offset b_wazer
-not_b_wazer:
-cmp selected_piece_type,'K'
-jne not_b_king
-    mov si,offset b_king
-not_b_king:
-cmp selected_piece_type,'S'
-jne not_b_soldier
-    mov si,offset b_soldier
-not_b_soldier:
+    mov al,current_x
+    mov x_new,al
+    mov ah,current_y
+    mov y_new,ah
+
+    inc y_new
+    cmp y_new,8
+    je next144
+                set_place_available x_new,y_new
+    draw_rectangle x_new,y_new,color_avilable_moves
+next144:
+
+ret
+soldierr endp
+;-----------------
+soldierr_b proc
+
+    mov al,current_x
+    mov x_new,al
+    mov ah,current_y
+    mov y_new,ah
+
+    dec y_new
+    cmp y_new,-1
+    je next1445
+                set_place_available x_new,y_new
+    draw_rectangle x_new,y_new,color_avilable_moves
+next1445:
+
+ret
+soldierr_b endp
+;-----------------
+draw_piece_by_type proc
+;check type of piece
+    cmp selected_piece_type,'t'
+    jne not_tabiaa
+        mov si,offset tabia
+    not_tabiaa:
+    cmp selected_piece_type,'h'
+    jne not_horse
+        mov si,offset horse
+    not_horse:
+    cmp selected_piece_type,'f'
+    jne not_fel
+        mov si,offset fel
+    not_fel:
+    cmp selected_piece_type,'w'
+    jne not_wazer
+        mov si,offset wazer
+    not_wazer:
+    cmp selected_piece_type,'k'
+    jne not_king
+        mov si,offset king
+    not_king:
+    cmp selected_piece_type,'s'
+    jne not_soldier
+        mov si,offset soldier
+    not_soldier:
+    ;------------
+    cmp selected_piece_type,'T'
+    jne not_b_tabiaa
+        mov si,offset b_tabia
+    not_b_tabiaa:
+    cmp selected_piece_type,'H'
+    jne not_b_horse
+        mov si,offset b_horse
+    not_b_horse:
+    cmp selected_piece_type,'F'
+    jne not_b_fel
+        mov si,offset b_fel
+    not_b_fel:
+    cmp selected_piece_type,'W'
+    jne not_b_wazer
+        mov si,offset b_wazer
+    not_b_wazer:
+    cmp selected_piece_type,'K'
+    jne not_b_king
+        mov si,offset b_king
+    not_b_king:
+    cmp selected_piece_type,'S'
+    jne not_b_soldier
+        mov si,offset b_soldier
+    not_b_soldier:
+
+
 
 mov al,[si]           ;just for storing the piece in piece_background by first pixel
 mov piece_background,al;to know background color of piece
@@ -1562,5 +1700,5 @@ jne l167
 
 ret
 draw_piece_by_type endp
-;------------
+;-----------------
 end main
