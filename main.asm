@@ -770,15 +770,13 @@ can_moveee:
 color_is_1:
     ;color is 1
     draw_rectangle_not_trans selected_piece_x,selected_piece_y,color1
-;now you must know which piece to draw
-
     ;draw_piece horse,sq_cursor_h,sq_cursor_v
     call draw_piece_by_type
     jmp color_is_1_and_drawn
 color_is_2:
-    ;draw_rectangle_not_trans selected_piece_x,selected_piece_y,color2
+    draw_rectangle_not_trans selected_piece_x,selected_piece_y,color2
+    ;draw_piece horse,sq_cursor_h,sq_cursor_v
     call draw_piece_by_type
-    draw_piece horse,sq_cursor_h,sq_cursor_v
 
 color_is_1_and_drawn:
 can_not_movee:
@@ -1529,14 +1527,14 @@ not_b_soldier:
 mov al,[si]           ;just for storing the piece in piece_background by first pixel
 mov piece_background,al;to know background color of piece
 mov ax,20d
-mov bl,selected_piece_y
+mov bl,sq_cursor_v
 mov bh,0
 mul bx  ; ax = y * 20
 mov bx,ax
 mov piece_y_end,bx
 add piece_y_end,20d
 l167:
-    mov al,selected_piece_x
+    mov al,sq_cursor_h
     mov ah,0
     mov di,ax
     mov ax,40d
