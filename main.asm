@@ -212,6 +212,165 @@ exit4:
 
 endm feeel
 ;------------
+kingg macro x_king,y_king
+local next1,next2,next3,next4,next5,next6,next7,next8
+mov al,x_king
+mov x_new,al
+mov ah,y_king
+mov y_new,ah
+
+inc x_new
+cmp x_new,8
+je next1
+draw_rectangle x_new,y_new,55
+next1:
+
+mov al,x_king
+mov x_new,al
+mov ah,y_king
+mov y_new,ah
+
+dec x_new
+cmp x_new,-1
+je next2
+draw_rectangle x_new,y_new,55
+next2:
+
+mov al,x_king
+mov x_new,al
+mov ah,y_king
+mov y_new,ah
+
+inc y_new
+cmp y_new,8
+je next3
+draw_rectangle x_new,y_new,55
+next3:
+
+mov al,x_king
+mov x_new,al
+mov ah,y_king
+mov y_new,ah
+
+dec y_new
+cmp y_new,-1
+je next4
+draw_rectangle x_new,y_new,55
+next4:
+
+mov al,x_king
+mov x_new,al
+mov ah,y_king
+mov y_new,ah
+
+inc x_new
+inc y_new
+cmp x_new,8
+je next5
+cmp y_new,8
+je next5
+draw_rectangle x_new,y_new,55
+next5:
+
+mov al,x_king
+mov x_new,al
+mov ah,y_king
+mov y_new,ah
+
+dec x_new
+inc y_new
+cmp x_new,-1
+je next6
+cmp y_new,8
+je next6
+draw_rectangle x_new,y_new,55
+next6:
+
+mov al,x_king
+mov x_new,al
+mov ah,y_king
+mov y_new,ah
+
+dec x_new
+dec y_new
+cmp x_new,-1
+je next7
+cmp y_new,-1
+je next7
+draw_rectangle x_new,y_new,55
+next7:
+
+mov al,x_king
+mov x_new,al
+mov ah,y_king
+mov y_new,ah
+
+inc x_new
+dec y_new
+cmp x_new,8
+je next8
+cmp y_new,-1
+je next8
+draw_rectangle x_new,y_new,55
+next8:
+endm kingg
+;------------
+tabiaa macro x_tabia,y_tabia
+local l1,l2,l3,l4,exit1,exit2,exit3,exit4
+
+    mov al,x_tabia
+    mov x_new,al
+    mov ah,y_tabia
+    mov y_new,ah
+
+    l1:
+        inc x_new
+        cmp x_new,8
+        je exit1
+          draw_rectangle x_new,y_new,55;55 is the highlight color
+    jmp l1
+exit1:
+
+    mov al,x_tabia
+    mov x_new,al
+    mov ah,y_tabia
+    mov y_new,ah
+
+    l2:
+        dec x_new
+        cmp x_new,-1
+        je exit2
+          draw_rectangle x_new,y_new,55;55 is the highlight color
+    jmp l2
+exit2:
+
+    mov al,x_tabia
+    mov x_new,al
+    mov ah,y_tabia
+    mov y_new,ah
+
+    l3:
+        inc y_new
+        cmp y_new,8
+        je exit3
+          draw_rectangle x_new,y_new,55;55 is the highlight color
+    jmp l3
+exit3:
+
+    mov al,x_tabia
+    mov x_new,al
+    mov ah,y_tabia
+    mov y_new,ah
+
+    l4:
+        dec y_new
+        cmp y_new,-1
+        je exit4
+          draw_rectangle x_new,y_new,55;55 is the highlight color
+    jmp l4
+exit4:
+endm tabiaa
+;------------
 .model small
 .stack 64
 .data
@@ -262,8 +421,10 @@ selected_piece_y db 0
 selected_piece db ? ;selected piece
 key db ? ;key pressed for logic
 ;------------move piece---------------;
-x_new db 0 ;for fel macro
+x_new db 0
 y_new db 0
+current_x db 0
+current_y db 0
 ;-------------white pieces--------------;
 soldier db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,7,15,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,15,15,15,15,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
@@ -669,7 +830,15 @@ ckeck_selected proc
     add al,selected_piece_x
     mov selected_piece,al
         draw_rectangle selected_piece_x,selected_piece_y,11
-        feeel selected_piece_x,selected_piece_y
+        ;feeel selected_piece_x,selected_piece_y
+        ;kingg selected_piece_x,selected_piece_y
+        ;tabiaa selected_piece_x,selected_piece_y
+        mov al,selected_piece_x
+        mov current_x,al
+        mov al,selected_piece_y
+        mov current_y,al
+        ;call wazerr
+        call horsee
     skip37:
 
 ret
@@ -814,7 +983,262 @@ Navigate proc
     ret
 Navigate endp
 ;-----------------
+wazerr proc
+    mov al,current_x
+    mov x_new,al
+    mov ah,current_y
+    mov y_new,ah
 
+    l12:
+        inc x_new
+        inc y_new
+        cmp x_new,8
+        je exit12
+        cmp y_new,8
+        je exit12
+          draw_rectangle x_new,y_new,55;55 is the highlight color
+    jmp l12
+exit12:
 
+    mov al,current_x
+    mov x_new,al
+    mov ah,current_y
+    mov y_new,ah
+
+    l13:
+        dec x_new
+        dec y_new
+        cmp x_new,-1
+        je exit13
+        cmp y_new,-1
+        je exit13
+          draw_rectangle x_new,y_new,55;55 is the highlight color
+    jmp l13
+exit13:
+
+    mov al,current_x
+    mov x_new,al
+    mov ah,current_y
+    mov y_new,ah
+
+    l14:
+        inc x_new
+        dec y_new
+        cmp x_new,8
+        je exit14
+        cmp y_new,-1
+        je exit14
+          draw_rectangle x_new,y_new,55;55 is the highlight color
+    jmp l14
+exit14:
+
+    mov al,current_x
+    mov x_new,al
+    mov ah,current_y
+    mov y_new,ah
+
+    l15:
+        dec x_new
+        inc y_new
+        cmp x_new,-1
+        je exit15
+        cmp y_new,8
+        je exit15
+          draw_rectangle x_new,y_new,55;55 is the highlight color
+    jmp l15
+exit15:
+
+    mov al,current_x
+    mov x_new,al
+    mov ah,current_y
+    mov y_new,ah
+
+    l16:
+        inc x_new
+        cmp x_new,8
+        je exit16
+          draw_rectangle x_new,y_new,55;55 is the highlight color
+    jmp l16
+exit16:
+
+    mov al,current_x
+    mov x_new,al
+    mov ah,current_y
+    mov y_new,ah
+
+    l17:
+        dec x_new
+        cmp x_new,-1
+        je exit17
+          draw_rectangle x_new,y_new,55;55 is the highlight color
+    jmp l17
+exit17:
+
+    mov al,current_x
+    mov x_new,al
+    mov ah,current_y
+    mov y_new,ah
+
+    l18:
+        inc y_new
+        cmp y_new,8
+        je exit18
+          draw_rectangle x_new,y_new,55;55 is the highlight color
+    jmp l18
+exit18:
+
+    mov al,current_x
+    mov x_new,al
+    mov ah,current_y
+    mov y_new,ah
+
+    l19:
+        dec y_new
+        cmp y_new,-1
+        je exit19
+          draw_rectangle x_new,y_new,55;55 is the highlight color
+    jmp l19
+exit19:
+
+ret
+wazerr endp
 ;-----------------
+horsee proc
+    mov al,current_x
+    mov x_new,al
+    mov ah,current_y
+    mov y_new,ah
+
+    l20:
+        inc x_new
+        inc y_new
+        cmp y_new,8
+        je exit20
+        inc y_new
+        cmp x_new,8
+        je exit20
+        cmp y_new,8
+        je exit20
+          draw_rectangle x_new,y_new,55;55 is the highlight color
+    jmp l20
+exit20:
+
+    mov al,current_x
+    mov x_new,al
+    mov ah,current_y
+    mov y_new,ah
+
+    l21:
+        dec x_new
+        dec y_new
+        cmp y_new,-1
+        je exit21
+        dec y_new
+        cmp x_new,-1
+        je exit21
+        cmp y_new,-1
+        je exit21
+          draw_rectangle x_new,y_new,55;55 is the highlight color
+    jmp l21
+exit21:
+;;;;;
+    mov al,current_x
+    mov x_new,al
+    mov ah,current_y
+    mov y_new,ah
+
+    l22:
+        inc x_new
+        dec y_new
+        cmp y_new,-1
+        JE exit22
+        dec y_new
+        cmp x_new,8
+        je exit22
+        cmp y_new,-1
+        JE exit22
+          draw_rectangle x_new,y_new,55;55 is the highlight color
+    jmp l22
+exit22:
+;;;;
+    mov al,current_x
+    mov x_new,al
+    mov ah,current_y
+    mov y_new,ah
+
+    l23:
+        dec x_new
+        inc y_new
+        cmp y_new,8
+        je exit23
+        inc y_new
+        cmp x_new,-1
+        je exit23
+        cmp y_new,8
+        je exit23
+          draw_rectangle x_new,y_new,55;55 is the highlight color
+    jmp l23
+exit23:
+;;;;;;
+    mov al,current_x
+    mov x_new,al
+    mov ah,current_y
+    mov y_new,ah
+
+    l24:
+        inc x_new
+        cmp x_new,8
+        je exit24
+        inc x_new
+        inc y_new
+        cmp x_new,8
+        je exit24
+        cmp y_new,8
+        je exit24
+          draw_rectangle x_new,y_new,55;55 is the highlight color
+    jmp l24
+exit24:
+
+    mov al,current_x
+    mov x_new,al
+    mov ah,current_y
+    mov y_new,ah
+
+    l25:
+        dec x_new
+        cmp x_new,-1
+        je exit25
+        dec x_new
+        inc y_new
+        cmp x_new,-1
+        je exit25
+        cmp y_new,8
+        je exit25
+          draw_rectangle x_new,y_new,55;55 is the highlight color
+    jmp l25
+exit25:
+
+    mov al,current_x
+    mov x_new,al
+    mov ah,current_y
+    mov y_new,ah
+
+    l26:
+        inc x_new
+        cmp x_new,8
+        je exit26
+        inc x_new
+        dec y_new
+        cmp x_new,8
+        je exit26
+        cmp y_new,-1
+        je exit26
+          draw_rectangle x_new,y_new,55;55 is the highlight color
+    jmp l26
+exit26:
+
+ret
+horsee endp
+
+
 end main
