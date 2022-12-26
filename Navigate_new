@@ -1,0 +1,150 @@
+;current_color db 04 ;you'll need to add this var
+Navigate proc
+    ;wait for user input
+  CHECK_ifkeypressed:
+    mov ah,1
+    int 16h;0 if no key pressed
+    jnz key_pressed
+    mov key,'0';set key to 0
+    ret
+  key_pressed:
+    mov ah,0 ;consume buffer
+    int 16h ;w=up,s=down,a=left,d=right
+    mov key,al
+    ;if al == ascii of any of these letters
+    ;it should do a distinct reaction
+    ;al == d (right)
+    cmp al,'d';;read ascii of 'd' from al
+    jz cond_go_right
+    cmp al,'a'
+    jz cond_go_left
+    cmp al,'w'
+    jz cond_go_up
+    cmp al,'s'
+    jz cond_l_go_down
+
+    exitt: ret
+    ;-----------------------------------
+ 
+    cond_go_right:
+    mov direction,1
+    cmp sq_cursor_h,7;check if cursor is at the end of the row
+    jz exitt
+    jmp start_nav
+
+    cond_go_left:
+    mov direction,2
+    cmp sq_cursor_h,0
+    jz exitt
+    jmp start_nav
+
+    cond_go_up:
+    mov direction,3
+    cmp sq_cursor_v,0
+    jz exitt
+    jmp start_nav
+
+    cond_l_go_down:
+    mov direction,4
+    cmp sq_cursor_v,7
+    jz exitt
+    jmp start_nav
+
+
+    start_nav:
+    push ax
+
+    mov ax,0
+    mov cx,0;;;;;;
+    mov al,sq_cursor_h
+    mul step_size_row ;ax = sq_cursor_h * step_size_row"40"
+    mov di,ax
+    mov cl,al;;;;;
+
+    mov ax,0
+    mov al,sq_cursor_v
+    mul step_size_col;ax = sq_cursor_v * step_size_col"6400"
+    add di,ax
+    add cl,al
+    
+    
+            
+    push di
+    draw_rect_trans current_color
+    ; mov al,color1
+    ; mov bl,color2
+    ; xchg al,bl
+    ; mov color1,al
+    ; mov color2,bl
+    pop di
+
+
+    pop ax
+    cmp direction,1;;read ascii of 'd' from al
+    jz go_right
+    cmp direction,2
+    jz go_left
+    cmp direction,3
+    jnz skip12 
+    jmp go_up
+    skip12:
+    cmp direction,4
+    jz l_go_down
+    ;;;;;;;;;;;;;;;;;;;;;;
+    go_right:
+    cmp sq_cursor_h,7
+    jz jump
+    
+    inc global_cursor
+
+    inc sq_cursor_h
+
+    call get_current_color
+    add di,40d;next columnin same row
+    push di
+    draw_rect_trans sel_color
+    pop di
+    jump:jmp end_nav
+    l_go_down: jmp go_down
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;
+    go_left:
+    cmp sq_cursor_h,0
+    jz jump
+    dec global_cursor
+
+    dec sq_cursor_h
+    call get_current_color
+    sub di,40d
+    push di
+    draw_rect_trans sel_color
+    pop di
+    jmp end_nav
+    ;;;;;;;;;;;;;;;;;;;;;;;;
+    go_up:
+    cmp sq_cursor_v,0
+    jz jump
+
+    sub global_cursor,8
+    dec sq_cursor_v
+    call get_current_color
+    sub di,6400d
+    push di
+    draw_rect_trans sel_color
+    pop di
+    jmp end_nav
+    ;;;;;;;;;;;;;;;;;;;;;;;;
+    go_down:
+    cmp sq_cursor_v,7
+    jz end_nav
+
+    add global_cursor,8
+
+    inc sq_cursor_v
+    call get_current_color
+    add di,6400d
+    push di
+    draw_rect_trans sel_color
+    pop di
+    end_nav:
+    ret
+Navigate endp
