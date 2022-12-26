@@ -1113,6 +1113,28 @@ Navigate proc
     ret
 Navigate endp
 ;-----------------
+get_current_color proc
+ ;get row from 0-7 to 0-199
+    mov ax,20d
+    mov bl,sq_cursor_v
+    mov bh,0
+    mul bx  ; ax = y * 20
+    mov bx,ax
+    ;get column from 0-7 to 0-319
+    mov ax,40d
+    mov cl,sq_cursor_h
+    mov ch,0
+    mul cx  ; ax = x * 40
+    mov cx,ax
+            ;get color of existing pixels
+            mov ah,0Dh
+            ;mov cx,dx;column
+            mov dx,bx;row
+            int 10H     ; AL = COLOR of exisiting pixel
+            mov current_color,al
+            ret
+get_current_color endp
+;-----------------
 wazerr proc
     mov al,current_x
     mov x_new,al
