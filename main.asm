@@ -139,7 +139,46 @@ local l11,l22,skip_me
     inc bx
     cmp bx,rect_y_end
     jne l11
-  endm draw_rectangle
+endm draw_rectangle
+;------------
+draw_rectangle_not_trans macro x_rect,y_rect,color_rect
+local l111,l222
+
+    mov ax,20d
+    mov bl,y_rect
+    mov bh,0
+    mul bx  ; ax = y * 20
+    mov bx,ax
+    mov rect_y_end,bx
+    add rect_y_end,20d
+    l111:
+        mov ax,40d
+        mov dl,x_rect
+        mov dh,0
+        mul dx ;ax = x * 40
+        mov dx,ax
+        mov rect_x_end,dx
+        add rect_x_end,40d ;40d
+        l222:
+             push dx
+            ;get color of existing pixels
+            mov ah,0Dh
+            mov cx,dx;column
+            mov dx,bx;row
+            int 10H     ; AL = COLOR of exisiting pixel
+
+            mov ah,0ch  ;draw pixel
+            mov al,color_rect
+            int 10h
+
+        pop dx
+        inc dx
+        cmp dx,rect_x_end
+        jne l222
+    inc bx
+    cmp bx,rect_y_end
+    jne l111
+  endm draw_rectangle_not_trans
 ;------------
 get_0to64_from_xy MACRO x_07,y_07 ; result"bl" = from 0 to 64
     mov bl,8
@@ -503,7 +542,8 @@ square_info LABEL BYTE
 ;--------ckeck selected piece---------;
 selected_piece_x db 0 ;selected piece x i want to move
 selected_piece_y db 0
-selected_piece db ? ;selected piece
+selected_piece_position db ? ;selected piece
+selected_pos_color db 7
 key db ? ;key pressed for logic
 ;------------move piece---------------;
 x_new db 0
@@ -511,6 +551,7 @@ y_new db 0
 current_x db 0
 current_y db 0
 color_avilable_moves db 55
+current_color db 04;color 1  for navigation
 ;------------get_rectcolor_by_xy------;
 x_rect_avilable db 0
 y_rect_avilable db 0
@@ -926,17 +967,18 @@ ckeck_selected proc
     mov al,selected_piece_y
     mul bl;al=y*8
     add al,selected_piece_x
-    mov selected_piece,al
-        draw_rectangle selected_piece_x,selected_piece_y,11
-        ;feeel selected_piece_x,selected_piece_y
-        ;kingg selected_piece_x,selected_piece_y
-        ;tabiaa selected_piece_x,selected_piece_y
+    mov selected_piece_position,al
+        draw_rectangle selected_piece_x,selected_piece_y,selected_pos_color
+
         mov al,selected_piece_x
         mov current_x,al
         mov al,selected_piece_y
         mov current_y,al
-        ;call wazerr
-        call horsee
+        ;feeel selected_piece_x,selected_piece_y
+        ;kingg selected_piece_x,selected_piece_y
+        ;tabiaa selected_piece_x,selected_piece_y
+        call wazerr
+        ;call horsee
     notq:
     ;check if want to move "m key pressed"
     cmp key,'m'
@@ -959,12 +1001,12 @@ can_moveee:
     jmp color_is_2
 color_is_1:
     ;color is 1
-    draw_rectangle sq_cursor_h,sq_cursor_v,color1
+    draw_rectangle_not_trans selected_piece_x,selected_piece_y,color2
 ;now you must know which piece to draw
     draw_piece horse,sq_cursor_h,sq_cursor_v
     jmp color_is_1_and_drawn
 color_is_2:
-    draw_rectangle sq_cursor_h,sq_cursor_v,color2
+    draw_rectangle_not_trans selected_piece_x,selected_piece_y,color1
     draw_piece horse,sq_cursor_h,sq_cursor_v
 
 color_is_1_and_drawn:
@@ -974,6 +1016,7 @@ notm:
 ret
 ckeck_selected endp
 ;-----------------
+;current_color db 04 ;you'll need to add this var
 Navigate proc
     ;wait for user input
   CHECK_ifkeypressed:
@@ -999,7 +1042,8 @@ Navigate proc
     jz cond_l_go_down
 
     exitt: ret
-
+    ;-----------------------------------
+ 
     cond_go_right:
     mov direction,1
     cmp sq_cursor_h,7;check if cursor is at the end of the row
@@ -1029,22 +1073,27 @@ Navigate proc
     push ax
 
     mov ax,0
+    mov cx,0;;;;;;
     mov al,sq_cursor_h
     mul step_size_row ;ax = sq_cursor_h * step_size_row"40"
     mov di,ax
+    mov cl,al;;;;;
 
     mov ax,0
     mov al,sq_cursor_v
     mul step_size_col;ax = sq_cursor_v * step_size_col"6400"
     add di,ax
-
+    add cl,al
+    
+    
+            
     push di
-    draw_rect_trans color1
-    mov al,color1
-    mov bl,color2
-    xchg al,bl
-    mov color1,al
-    mov color2,bl
+    draw_rect_trans current_color
+    ; mov al,color1
+    ; mov bl,color2
+    ; xchg al,bl
+    ; mov color1,al
+    ; mov color2,bl
     pop di
 
 
@@ -1063,10 +1112,12 @@ Navigate proc
     go_right:
     cmp sq_cursor_h,7
     jz jump
-
+    
     inc global_cursor
 
     inc sq_cursor_h
+
+    call get_current_color
     add di,40d;next columnin same row
     push di
     draw_rect_trans sel_color
@@ -1080,6 +1131,7 @@ Navigate proc
     dec global_cursor
 
     dec sq_cursor_h
+    call get_current_color
     sub di,40d
     push di
     draw_rect_trans sel_color
@@ -1092,6 +1144,7 @@ Navigate proc
 
     sub global_cursor,8
     dec sq_cursor_v
+    call get_current_color
     sub di,6400d
     push di
     draw_rect_trans sel_color
@@ -1105,6 +1158,7 @@ Navigate proc
     add global_cursor,8
 
     inc sq_cursor_v
+    call get_current_color
     add di,6400d
     push di
     draw_rect_trans sel_color
