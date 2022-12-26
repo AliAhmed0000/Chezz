@@ -97,7 +97,7 @@ even_place:
 end_check:
     jmp end_check
 endm check_square_color
-;------------
+;------------draw_rectangle don't draw on existing pixels
 draw_rectangle macro x_rect,y_rect,color_rect
 local l11,l22,skip_me
 
@@ -142,6 +142,19 @@ local l11,l22,skip_me
     cmp bx,rect_y_end
     jne l11
   endm draw_rectangle
+;------------
+get_0to64_from_xy MACRO x,y
+    mov bl,8
+    mov al,y
+    mul bl;al=y*8
+    add al,x
+    mov bl,al
+endm get_0to64_from_xy
+;------------
+time macro
+mov ah,2ch
+int 21h ;dh= current second
+endm time
 ;------------
 feeel macro x_fel,y_fel
 local l1,l2,l3,l4,exit1,exit2,exit3,exit4
@@ -1109,7 +1122,6 @@ horsee proc
     mov ah,current_y
     mov y_new,ah
 
-    l20:
         inc x_new
         inc y_new
         cmp y_new,8
@@ -1120,7 +1132,6 @@ horsee proc
         cmp y_new,8
         je exit20
           draw_rectangle x_new,y_new,55;55 is the highlight color
-    jmp l20
 exit20:
 
     mov al,current_x
@@ -1128,7 +1139,6 @@ exit20:
     mov ah,current_y
     mov y_new,ah
 
-    l21:
         dec x_new
         dec y_new
         cmp y_new,-1
@@ -1139,15 +1149,13 @@ exit20:
         cmp y_new,-1
         je exit21
           draw_rectangle x_new,y_new,55;55 is the highlight color
-    jmp l21
 exit21:
-;;;;;
+
     mov al,current_x
     mov x_new,al
     mov ah,current_y
     mov y_new,ah
 
-    l22:
         inc x_new
         dec y_new
         cmp y_new,-1
@@ -1158,15 +1166,13 @@ exit21:
         cmp y_new,-1
         JE exit22
           draw_rectangle x_new,y_new,55;55 is the highlight color
-    jmp l22
 exit22:
-;;;;
+
     mov al,current_x
     mov x_new,al
     mov ah,current_y
     mov y_new,ah
 
-    l23:
         dec x_new
         inc y_new
         cmp y_new,8
@@ -1177,15 +1183,13 @@ exit22:
         cmp y_new,8
         je exit23
           draw_rectangle x_new,y_new,55;55 is the highlight color
-    jmp l23
 exit23:
-;;;;;;
+
     mov al,current_x
     mov x_new,al
     mov ah,current_y
     mov y_new,ah
 
-    l24:
         inc x_new
         cmp x_new,8
         je exit24
@@ -1196,7 +1200,6 @@ exit23:
         cmp y_new,8
         je exit24
           draw_rectangle x_new,y_new,55;55 is the highlight color
-    jmp l24
 exit24:
 
     mov al,current_x
@@ -1204,7 +1207,6 @@ exit24:
     mov ah,current_y
     mov y_new,ah
 
-    l25:
         dec x_new
         cmp x_new,-1
         je exit25
@@ -1215,7 +1217,6 @@ exit24:
         cmp y_new,8
         je exit25
           draw_rectangle x_new,y_new,55;55 is the highlight color
-    jmp l25
 exit25:
 
     mov al,current_x
@@ -1223,7 +1224,23 @@ exit25:
     mov ah,current_y
     mov y_new,ah
 
-    l26:
+        dec x_new
+        cmp x_new,-1
+        je exit255
+        dec x_new
+        dec y_new
+        cmp x_new,-1
+        je exit255
+        cmp y_new,-1
+        je exit255
+          draw_rectangle x_new,y_new,55;55 is the highlight color
+exit255:
+
+    mov al,current_x
+    mov x_new,al
+    mov ah,current_y
+    mov y_new,ah
+
         inc x_new
         cmp x_new,8
         je exit26
@@ -1234,11 +1251,11 @@ exit25:
         cmp y_new,-1
         je exit26
           draw_rectangle x_new,y_new,55;55 is the highlight color
-    jmp l26
 exit26:
 
 ret
 horsee endp
+;-----------------
 
 
 end main
