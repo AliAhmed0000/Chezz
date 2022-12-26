@@ -942,7 +942,7 @@ Navigate proc
 
     exitt: ret
     ;-----------------------------------
- 
+
     cond_go_right:
     mov direction,1
     cmp sq_cursor_h,7;check if cursor is at the end of the row
