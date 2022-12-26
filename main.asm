@@ -18,14 +18,17 @@ mov si,offset piece
 mov al,piece           ;just for storing the piece in piece_background
 mov piece_background,al;to know background color of piece
 mov ax,20d
-mov bx,y_piece
+mov bl,y_piece
+mov bh,0
 mul bx  ; ax = y * 20
 mov bx,ax
 mov piece_y_end,bx
 add piece_y_end,20d
 l1:
+    mov al,x_piece
+    mov ah,0
+    mov di,ax
     mov ax,40d
-    mov di,x_piece
     mul di ;ax = x * 40
     mov di,ax
     mov piece_x_end,di
@@ -946,6 +949,7 @@ ckeck_selected proc
     je can_moveee
     jmp can_not_movee;not equal 1 don't move
 can_moveee:
+    reset_available_places;;;;;;;;;;;;;;;;;;;;;;
     ;move piece to new position
     ;call move_piece
     check_square_color sq_cursor_h,sq_cursor_v ;al=0 if color1
@@ -957,10 +961,11 @@ color_is_1:
     ;color is 1
     draw_rectangle sq_cursor_h,sq_cursor_v,color1
 ;now you must know which piece to draw
-    draw_piece horse,sq_cursor_h,sq_cursor_v;;;;;;;;;;;;;;;;;;;;;;;;;;x,y of pieceis words sadly
+    draw_piece horse,sq_cursor_h,sq_cursor_v
     jmp color_is_1_and_drawn
 color_is_2:
     draw_rectangle sq_cursor_h,sq_cursor_v,color2
+    draw_piece horse,sq_cursor_h,sq_cursor_v
 
 color_is_1_and_drawn:
 can_not_movee:
