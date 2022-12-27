@@ -556,8 +556,8 @@ endm get_rectcolor_by_xy
   w       dw 40   ;width of the square
   len     dw 20   ; length (height) of each row of squares
   ;count   dw 0    ; dummy maloosh lazma XD
-  color1  db 7d  ; primary color of the board
-  color2  db 49d  ; secondary color
+  color1  db 04d  ; primary color of the board
+  color2  db 2d  ; secondary color
   c db ?
   no_rows db 8    ; number of rows to be drawn
   no_sqs db 8
@@ -959,11 +959,13 @@ same_second:
 
     call Navigate
     call ckeck_selected
-
+    ;call ckeck wineer;mov winner 0;1;2
 ;main loop of game,not to end game
 cmp continue_counter,0
 jnz continue_label
 ;--------------------------end of game---------------------;
+someone_wins:
+
 skip_game:
 ;just for dosbox
     mov       ah, 4ch
@@ -1248,7 +1250,7 @@ color_is_1:
     mov squares_container[bx],'0'
     mov al,selected_piece_type
     mov squares_container[si],al
-;------------------------
+;------------------------s
     ;desired_position,selected_piece_position
     ;reset board to un highlighted
     push di
