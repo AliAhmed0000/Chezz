@@ -65,13 +65,13 @@ endm setCursor
 
  checkKey macro
 
-    cmp ax,2000h
+    cmp ah,3Bh
     jz F1
 
-    cmp ax,2E00h
+    cmp ah,3Ch
     jz F2
 
-    cmp ax,011Bh
+    cmp ah,01
     jz ESC1
 
     mov al,0d
@@ -906,6 +906,8 @@ square_info LABEL BYTE
  User2_Name DB 16,?,16 DUP('$');max user name size = 15  
 
  lower_initial_point db ?;max initial point is 99 deciamls (i.e less 8 bits)
+
+ key1_pressed db ?;to store the key pressed in part1
 ;-------------------------------------------------  
 
 .code
@@ -918,7 +920,14 @@ main proc far
 
            call Users_screen
            call second
+
+           mov key1_pressed,al;from part1
 ;-----------------------------;
+
+    cmp key1_pressed,2 ;if F2 is pressed enter game
+    je don_not_jump
+    jmp skip_game
+    don_not_jump:
 
     mov ax,0A000h
     mov es,ax
@@ -954,7 +963,8 @@ same_second:
 ;main loop of game,not to end game
 cmp continue_counter,0
 jnz continue_label
-
+;--------------------------end of game---------------------;
+skip_game:
 ;just for dosbox
     mov       ah, 4ch
     mov       al, 01h
