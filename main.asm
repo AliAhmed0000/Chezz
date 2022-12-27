@@ -556,8 +556,8 @@ endm get_rectcolor_by_xy
   w       dw 40   ;width of the square
   len     dw 20   ; length (height) of each row of squares
   ;count   dw 0    ; dummy maloosh lazma XD
-  color1  db 04h  ; primary color of the board
-  color2  db 02h  ; secondary color
+  color1  db 7d  ; primary color of the board
+  color2  db 49d  ; secondary color
   c db ?
   no_rows db 8    ; number of rows to be drawn
   no_sqs db 8
