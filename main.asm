@@ -1,3 +1,272 @@
+;---------part1---------------------
+ changetograph macro 
+    mov ah,0
+    mov al,13h
+    int 10h
+ endm  changetograph
+
+
+ changetotxt macro
+    mov ah,0
+    mov al,3h
+    int 10h
+ endm  changetotxt
+
+ clearScrean macro
+
+    mov ax,0000h
+    mov bh,07h
+    mov cx,0
+    mov dh,25d
+    mov dl,80d
+    int 10h
+
+ endm clearScrean
+
+ displayString macro str    
+           
+    mov ah, 9h
+    mov dx, offset str
+    int 21h
+        
+ endm displayString 
+
+ setCursor macro x,y
+    mov bh, 0h
+    mov ah,2h
+    mov dl,x
+    mov dh,y
+    int 10h
+
+endm setCursor
+
+
+ drawHLine macro y2
+
+    mov cx,0 ;Column
+    mov dx,y2 ;Row
+    mov al,0Fh ;Pixel color
+    mov ah,0ch ;Draw Pixel Command
+    back: int 10h
+    inc cx
+    cmp cx,320d
+    jnz back
+
+ endm drawHLine
+
+
+ getKey macro
+    
+
+    mov ah,0
+    int 16h
+
+ endm getKey
+
+ checkKey macro
+
+    cmp ax,2000h
+    jz F1
+
+    cmp ax,2E00h
+    jz F2
+
+    cmp ax,011Bh
+    jz ESC1
+
+    mov al,0d
+    jmp finish
+
+
+    F1:
+    mov al,1d
+    jmp finish
+
+    F2:
+    mov al,2d
+    jmp finish
+
+    ESC1:
+    mov al,3d
+    jmp finish
+
+    finish:
+ endm checkKey
+
+ get_user_num Macro;  the num is stored @ cl                  
+                     ;ex:  num= 12  
+                
+             mov ah,1 
+             
+             int 21h ;al = ascii al 31 
+             
+             sub al,30h; now al=1 
+             
+             mov bl,al;bl=1
+             
+             mov ah,1
+             int 21h       ;  al=ascii ex al 32
+             sub al,30h    ;  al=2
+             
+            ;  mov  ah,al  
+            
+             mov cl,al 
+             
+             mov al,10d; hexa not deci
+             
+             mul bl;ax=al*bl=10*1=0010->al=10 ===>> ah=00
+            
+             add cl,al;cl=cl+al=2+10=12
+                  
+ ENDM  get_user_num     
+ ;----------  *****************************************
+ display_new_line Macro
+      
+                 mov ah,9  
+                 
+                 mov dx,offset nw_line   
+                 
+                 int 21h                 
+    
+  ENDM display_new_line
+ ;---------   ****************************************
+ display_Message MACRO MyMessage
+
+            mov ah,9h
+
+            mov dx,offset MyMessage
+
+            int 21h
+
+ ENDM display_Message   
+ ;------------ ****************************************
+ UserN_validatin MACRO  Useri_Name   
+    local check_UN,invalid_UN,press_enter,end_check
+                      
+              check_UN: 
+              
+              ;;; invalid ==> mov ax,offset username+2; both first two element are size 
+              
+                       mov al,Useri_Name+2   ;al == we need first character 
+                         
+                       cmp al,41h;hexa
+                                       ;if char bigger than((A))
+                       jc invalid_UN 
+                       
+                       ;******
+                       
+                       cmp al,7Bh  ;if char > z ==>> not valid
+                                 
+                       jnc invalid_UN 
+                       
+                       ;******
+                        
+                       cmp al,5Bh
+                                 ;if char > z ==>> not valid
+               
+                                 ;if cf=1 ===>> this menas char is=<z
+                                 
+                       jc end_check
+                        
+                       ;**====== 
+                       
+                       cmp al,61h     ;  hexa not decima
+                       
+                       jnc end_check  ;if(char>=a); this valid 
+                       
+                                      ;else do the invalid username code 
+                                    
+                       ;---**======
+                       
+                       
+            invalid_UN: 
+            
+            display_new_line 
+            display_Message MSG4
+                        
+                        ;///////  
+                        
+             press_enter: 
+             display_new_line
+             display_Message MSG6
+                         
+                       
+                       mov ah,07
+                        int 21h;read without echo one char and putting @ al  
+                        
+                        cmp al,0Dh;enter key === >> from ascii table 
+                        jnz press_enter;if the user pressed another key which not ENTER, DISP a message waiting hom press ENETR
+                        
+                        
+                       ;------**======
+                       
+                       mov ax,0600h
+                       mov bh,07 
+                       mov cx,0 
+                       mov dx,184FH
+                       int 10h 
+                       
+                       ;******
+                       
+                       set_cursor_at_middle 
+                       
+                       ;******
+                       
+                        display_Message MSG1  
+                        display_new_line
+                                  
+                        MOV AH,0AH
+                        MOV DX , OFFSET Useri_Name
+                        INT 21H 
+                        
+                        jmp check_UN       
+                               
+            end_check:
+    
+ ENDM UserN_validatin  
+ ;------------*****************************************  
+ set_cursor_at_middle MACRO      
+                    
+                    
+                     mov ah,2
+                     mov dh,2h
+                     ;mov dl,2h ====x
+                     mov dl,2h 
+                     
+                     mov bh,0
+                     int 10h
+    
+ ENDM set_cursor_at_middle  
+ ;------------*****************************************
+ username_interface MACRO  Useri_Name
+                  
+                  set_cursor_at_middle 
+                   ;------------
+                  display_Message MSG1  
+                  display_new_line
+                                  
+                  MOV AH,0AH
+                  MOV DX , OFFSET Useri_Name
+                  INT 21H  
+                  
+                  UserN_validatin Useri_Name                                 
+                 ;------------
+                 display_new_line               
+                 display_Message MSG2 
+                 ;------------     
+                 display_new_line                  
+                 get_user_num 
+                 
+                 mov ch,0;cl == the num , ch must set to be 0 (so that make the number=00cl)for the cmp bet. both initial point
+                 push cx;saving initial points result a stack
+                  ;------------
+                  display_new_line 
+                  display_Message MSG3  
+    
+ ENDM  username_interface
+;--------------------------
+
+;--------------------------end part1-------------------
 draw_rect MACRO color
 local l1
     mov dx,di
@@ -245,7 +514,18 @@ endm move_piece
 time macro
 mov ah,2ch
 int 21h ;dh= current second
+mov current_second,dh
 endm time
+;------------
+update_time_of_all macro
+local loop_time
+    mov cx,64
+    mov bx,0
+loop_time:
+    inc time_array[bx]
+    inc bx
+loop loop_time
+endm update_time_of_all
 ;------------
 get_rectcolor_by_xy macro
     ;get row from 0-7 to 0-199
@@ -330,6 +610,9 @@ square_info LABEL BYTE
 ;------------get_rectcolor_by_xy------;
  x_rect_avilable db 0
  y_rect_avilable db 0
+;------------timer-----------;
+ current_second db 0
+ time_array db 64 dup(3);all can move initially
 ;------------available_places-----------;
  available_places db 0,0,0,0,0,0,0,0
  db 0,0,0,0,0,0,0,0
@@ -604,12 +887,38 @@ square_info LABEL BYTE
  db 8 dup('0')
  db 8 dup('S')
  db "THFWKFHT"
+;--------------part1-------------------------;
+  string1 db "To start chatting press F1",'$'
+  string2 db "To start the game press F2",'$'
+  string3 db "To end the game press ESC",'$'
 
+ nw_line DB 10,13,"$" 
+
+ MSG1 DB 10,13,"Please Enter Your Name:$" 
+ MSG2 DB 10,13,"Initial Points:$"
+ MSG3 DB 10,13,"Press Enter Key to Continue$" 
+ 
+ MSG4 DB 10,13,"Invalid UserName$"
+ 
+ MSG6 DB 10,13,"Please Press Enter Key to try again$" 
+
+ User1_Name DB 16,?,16 DUP('$');max user name size = 15 
+ User2_Name DB 16,?,16 DUP('$');max user name size = 15  
+
+ lower_initial_point db ?;max initial point is 99 deciamls (i.e less 8 bits)
+;-------------------------------------------------  
 
 .code
 main proc far
     mov ax,@data
     mov ds,ax
+;-------part1-----------------;
+           clearScrean
+           changetotxt
+
+           call Users_screen
+           call second
+;-----------------------------;
 
     mov ax,0A000h
     mov es,ax
@@ -628,7 +937,16 @@ main proc far
     mov di,0
     draw_rect_trans sel_color
 
+    time ;set current_second
 continue_label:
+
+    mov ah,2ch
+    int 21h ;dh= current second
+    cmp dh,current_second
+    je same_second
+    inc current_second ;second passed
+    update_time_of_all
+same_second:
 
     call Navigate
     call ckeck_selected
@@ -830,6 +1148,16 @@ notq:
     je xcxpp
     jmp notm
     xcxpp:;key is m check if can move to new position
+;check if can move "time passed from last move > 3 seconds"
+    mov bl,selected_piece_position
+    mov bh,0
+    mov cl,time_array[bx]
+    cmp cl,3
+    ;JB _3seconds_not_passed;don't move or do any thing
+    JAE vvv
+    jmp _3seconds_not_passed
+    vvv:
+
     can_move_or_not sq_cursor_h,sq_cursor_v  ;al=1 if can move
     cmp al,1
     ;jne can_not_movee ;0 can't move
@@ -851,12 +1179,6 @@ can_moveee:
     add al,sq_cursor_h
     mov desired_position,al
 
-    ;check if it is white or black------------------------------------
-    mov bl,8
-    mov al,sq_cursor_v
-    mul bl;al=y*8
-    add al,sq_cursor_h
-    mov desired_position,al
 ;------CHECK WHITE OR BLACK TO PREVENT DRAW ON HIS PIECES---------
     mov bl,desired_position
     mov bh,0
@@ -887,6 +1209,15 @@ can_moveee:
 
 ;-------------------------------------------------------
     ;move piece to new position
+;update time_array of new place set it to 0
+    mov bl,desired_position
+    mov bh,0
+    mov time_array[bx],0
+
+    mov bl,selected_piece_position;old position timer reset to 3 to enable moves in it
+    mov bh,0
+    mov time_array[bx],3
+
     ;call move_piece
     check_square_color sq_cursor_h,sq_cursor_v ;al=0 if color1
     cmp al,0
@@ -938,6 +1269,7 @@ color_is_2:
 
 color_is_1_and_drawn:
 can_not_movee:
+_3seconds_not_passed:
     ;reset board to un highlighted if me want wrong move
     push di
     mov di,0
@@ -1772,4 +2104,94 @@ jne l167
 ret
 draw_piece_by_type endp
 ;-----------------
+;----part1--------
+Users_screen   PROC  
+                
+                  ;username_interface:player 1st palyer
+                  
+                   username_interface User1_Name       ;/\/\/\/\/\/\/\
+                  
+                    
+        press_enter2: 
+        
+        mov ah,07
+        int 21h;Read one char putting @ al without echo 
+                        
+        cmp al,0Dh;enter key=> from ascii code table 
+        jz user2_inter
+        display_new_line
+        display_Message MSG3  
+        jmp press_enter2   
+                     
+                     
+                   
+        user2_inter: 
+          
+        mov ax,0600h
+        mov bh,07 
+        mov cx,0 
+        mov dx,184FH
+        int 10h 
+        set_cursor_at_middle  
+                       
+                       
+                       
+                       
+                        ;username interface:player 2   
+                         username_interface User2_Name ;/\/\/\/\/\/\/\
+                   
+                   
+                   pop ax; ax=user#2 ==> initial point
+                   pop bx; ax=user#1 ==> initial point    
+                   
+                   cmp ax,bx
+                   jnc choose_user1_IP;no carry=bx is lower& ax reg is bigger
+   
+                   mov dx,ax
+                   jmp push_result 
+                   
+   choose_user1_IP: mov dx,bx   
+  
+   push_result:     
+                   mov lower_initial_point,dl;max initial_point was assumed 99 deciamls
+                    
+;-------------------------    
+                    
+ret    
+
+Users_screen                   ENDP  
+;-----------------
+second proc 
+
+       changetograph
+
+       setCursor     8d,5d
+       displayString string1
+       setCursor     8d,7d
+       displayString string2
+       setCursor     8d,9d
+       displayString string3
+
+
+       mov           ax, 1003h
+       mov           bx, 0      ; disable blinking.
+       int           10h
+       drawHLine     150d
+
+       setCursor     0d,19d
+ 
+
+  A:   
+       getKey
+       checkKey
+       cmp           al,0
+       jz            A
+
+
+    
+ret
+       
+    
+second endp
+
 end main
