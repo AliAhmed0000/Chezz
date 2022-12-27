@@ -518,11 +518,14 @@ mov current_second,dh
 endm time
 ;------------
 update_time_of_all macro
-local loop_time
+local loop_time,max_time
     mov cx,64
     mov bx,0
 loop_time:
-    inc time_array[bx]
+    cmp time_array[bx],3
+    je max_time
+        inc time_array[bx]
+    max_time: ;don't increment
     inc bx
 loop loop_time
 endm update_time_of_all
@@ -908,7 +911,7 @@ square_info LABEL BYTE
  lower_initial_point db ?;max initial point is 99 deciamls (i.e less 8 bits)
 
  key1_pressed db ?;to store the key pressed in part1
-;-------------------------------------------------  
+;-------------------------------------------------
 
 .code
 main proc far
@@ -1166,7 +1169,8 @@ notq:
     mov cl,time_array[bx]
     cmp cl,3
     ;JB _3seconds_not_passed;don't move or do any thing
-    JAE vvv
+    ;JAE vvv
+    je vvv
     jmp _3seconds_not_passed
     vvv:
 
