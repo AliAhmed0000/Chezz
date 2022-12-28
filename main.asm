@@ -121,24 +121,22 @@ endm setCursor
  ENDM  get_user_num     
  ;----------  *****************************************
  display_new_line Macro
-      
-                 mov ah,9  
-                 
-                 mov dx,offset nw_line   
-                 
-                 int 21h                 
-    
-  ENDM display_new_line
+
+    mov ah,9  
+    mov dx,offset nw_line   
+
+    int 21h
+ endm display_new_line
  ;---------   ****************************************
  display_Message MACRO MyMessage
 
-            mov ah,9h
+    mov ah,9h
 
-            mov dx,offset MyMessage
+    mov dx,offset MyMessage
 
-            int 21h
+    int 21h
 
- ENDM display_Message   
+ ENDM display_Message
  ;------------ ****************************************
  UserN_validatin MACRO  Useri_Name   
     local check_UN,invalid_UN,press_enter,end_check
@@ -595,6 +593,7 @@ square_info LABEL BYTE
 ;-------------draw_rectangle----------;
     rect_x_end dw ?
     rect_y_end dw ?
+    old_color db ?
 ;--------ckeck selected piece---------;
  selected_piece_x db 0 ;selected piece x i want to move
  selected_piece_y db 0
@@ -1298,6 +1297,7 @@ ckeck_selected endp
 ;-----------------
 ;current_color db 04 ;you'll need to add this var
 Navigate proc
+
     ;wait for user input
   CHECK_ifkeypressed:
     mov ah,1
@@ -1392,7 +1392,7 @@ Navigate proc
     go_right:
     cmp sq_cursor_h,7
     jz jump
-    
+
     inc global_cursor
 
     inc sq_cursor_h
