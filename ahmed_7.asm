@@ -1280,20 +1280,20 @@ color_is_1:
     cmp squares_container[si],'K'
     jz w_wins
     jmp cont77
-    
+
     b_wins:
     mov winner,1
     draw_piece horse,6,4
     jmp cont77
     w_wins:
     mov winner,2
-    draw_piece horse,6,5
+    draw_piece fel,2,5
     cont77:
 ;------------------------------------
     mov squares_container[bx],'0'
     mov al,selected_piece_type
     mov squares_container[si],al
-;------------------------s
+;------------------------
     ;desired_position,selected_piece_position
     ;reset board to un highlighted
     push di
