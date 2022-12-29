@@ -1515,6 +1515,9 @@ Navigate endp
 ;-----------------
 get_current_color proc
  ;get row from 0-7 to 0-199
+    ;mov bx,global_cursor
+    ;cmp available_places[bx]
+
     mov ax,20d
     mov bl,sq_cursor_v
     mov bh,0
@@ -1844,16 +1847,15 @@ feeel proc
         inc x_new
         inc y_new
         cmp x_new,8
-        jne f0
+        jne f00
         jmp exit1
-        f0:
+        f00:
         cmp y_new,8
         ;jne f1
         jne h232
-        jmp f1
-        h232:
         jmp exit1
-        f20:
+        h232:
+
 
         get_0to64_from_xy x_new,y_new ;bl=0to64
         white_or_blak_piece squares_container[bx]
