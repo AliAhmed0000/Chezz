@@ -1870,9 +1870,24 @@ exit1:
         dec x_new
         inc y_new
         cmp x_new,-1
-        je exit2
+        ;je exit2
+        jne f2e
+        jmp exit2
+        f2e:
         cmp y_new,8
-        je exit2
+        ;je exit2
+        jne f2q
+        jmp exit2
+        f2q:
+    mov bl,8
+    mov al,y_new
+    mul bl
+    add al,x_new
+    mov ah,0
+    mov bx,ax
+        cmp squares_container[bx],'a'
+        jae exit2
+
           set_place_available x_new,y_new
           draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
     jmp l2
