@@ -118,7 +118,7 @@ endm setCursor
             
              add cl,al;cl=cl+al=2+10=12
                   
- ENDM  get_user_num     
+ ENDM  get_user_num
  ;----------  *****************************************
  display_new_line Macro
 
@@ -595,7 +595,7 @@ endm white_or_blak_piece
   ;----------navigation 2
   sel_color2 db 0bh ;color of the Navigateing square
   continue_counter2 db 1
-  global_cursor2 db 0; 0-63
+  global_cursor2 db 60; 0-63
   sq_cursor_h2 db 4; horizontal initialized position
   sq_cursor_v2 db 7; vertical initialized position
   direction2 db 0
@@ -615,23 +615,37 @@ square_info LABEL BYTE
     sq_background db ?;;;;;;;;;;;;;;;;;;;;
     w_counter db ?
     l_counter db ?
-;-------------------pieces--------------
-;king ,wazer ,tabia , horse ,soldier ,fel
+;------pieces--draw piece by type------------
+ ;king ,wazer ,tabia , horse ,soldier ,fel
     piece_x_end dw ?
     piece_y_end dw ?
     piece_background db ?
+ ;------draw piece by type2------------
+  ;king ,wazer ,tabia , horse ,soldier ,fel
+    piece_x_end2 dw ?
+    piece_y_end2 dw ?
+    piece_background2 db ?
 ;-------------draw_rectangle----------;
     rect_x_end dw ?
     rect_y_end dw ?
     old_color db ?
 ;--------ckeck selected piece---------;
- selected_piece_x db 0 ;selected piece x i want to move
- selected_piece_y db 0
- selected_piece_position db ? ;selected piece
- selected_pos_color db 7
- selected_piece_type db ? ;type of piece
- desired_position db ?
- selected_piece_color db ? ;color of piece
+ ;--------ckeck selected piece 1---------;
+  selected_piece_x db 0 ;selected piece x i want to move
+  selected_piece_y db 0
+  selected_piece_position db ? ;selected piece
+  selected_pos_color db 7
+  selected_piece_type db ? ;type of piece
+  desired_position db ?
+  selected_piece_color db ? ;color of piece
+ ;--------ckeck selected piece2---------;
+    selected_piece_x2 db 0 ;selected piece x i want to move
+    selected_piece_y2 db 0
+    selected_piece_position2 db ? ;selected piece
+    selected_pos_color2 db 9
+    selected_piece_type2 db ? ;type of piece
+    desired_position2 db ?
+    selected_piece_color2 db ? ;color of piece
 ;------------move piece---------------;
  x_new db 0
  y_new db 0
@@ -644,7 +658,7 @@ square_info LABEL BYTE
   y_new2 db 0
   current_x2 db 0
   current_y2 db 0
-  color_avilable_moves2 db 55
+  color_avilable_moves2 db 66
   current_color2 db 02;color 1  for navigation ;initializet square color of selector
 ;------------get_rectcolor_by_xy------;
  x_rect_avilable db 0
@@ -661,27 +675,28 @@ square_info LABEL BYTE
  db 0,0,0,0,0,0,0,0
  db 0,0,0,0,0,0,0,0
  db 0,0,0,0,0,0,0,0
-;-------------white pieces--------------;
- soldier db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,7,15,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
- db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,15,15,15,15,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
- db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,15,15,15,15,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
- db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,15,15,15,15,15,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
- db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,15,15,15,15,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
- db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,15,15,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
- db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,15,15,15,15,15,15,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
- db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,15,15,15,15,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
- db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,15,15,15,15,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
- db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,15,15,15,15,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
- db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,15,15,15,15,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
- db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,15,15,15,15,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
- db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,15,15,15,15,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
- db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,15,15,15,15,15,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
- db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,15,15,15,15,15,15,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
- db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,15,15,15,15,15,15,15,15,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
- db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,15,15,15,15,15,15,15,15,15,15,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0
- db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,15,15,15,15,15,15,15,15,15,15,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0
- db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,15,15,15,15,15,15,15,15,15,15,15,0,0,0,0,0,0,0,0,0,0,0,0,0,0
- db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,8,8,8,8,8,8,8,8,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+;-------------all pieces pixels--------------;
+ ;-------------white pieces--------------;
+  soldier db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,7,15,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+  db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,15,15,15,15,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+  db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,15,15,15,15,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+  db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,15,15,15,15,15,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+  db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,15,15,15,15,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+  db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,15,15,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+  db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,15,15,15,15,15,15,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+  db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,15,15,15,15,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+  db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,15,15,15,15,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+  db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,15,15,15,15,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+  db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,15,15,15,15,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+  db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,15,15,15,15,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+  db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,15,15,15,15,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+  db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,15,15,15,15,15,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+  db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,15,15,15,15,15,15,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+  db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,15,15,15,15,15,15,15,15,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+  db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,15,15,15,15,15,15,15,15,15,15,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+  db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,15,15,15,15,15,15,15,15,15,15,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+  db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,15,15,15,15,15,15,15,15,15,15,15,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+  db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,8,8,8,8,8,8,8,8,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
   ;--------------------
   horse db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
   db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,7,15,15,15,7,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
@@ -787,7 +802,7 @@ square_info LABEL BYTE
   db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,15,15,15,15,15,15,15,15,15,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
   db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,15,15,15,15,15,15,15,15,15,15,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0
   db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,8,8,8,8,8,8,8,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-  ;------------black pieces------------;
+ ;------------black pieces------------;
   b_king db 15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,7,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15
   db 15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,0,8,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15
   db 15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,0,8,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15
@@ -984,8 +999,8 @@ main proc far
 
     call initialize_pieces
 
-    mov di,160        ;where you want to initialize this selector
-    draw_rect_trans sel_color
+    ;mov di,160        ;where you want to initialize this selector
+    ;draw_rect_trans sel_color
 
     mov di,44960d        ;where you want to initialize this selector
     draw_rect_trans sel_color2
@@ -1007,7 +1022,7 @@ same_second:
     int 16h;0 if no key pressed
     jnz key_pressed
     mov key,'0';set key to 0
-                jmp continue_label;        remove me if error
+                ;jmp continue_label;        remove me if error
   key_pressed:
     mov ah,0 ;consume buffer
     int 16h ;w=up,s=down,a=left,d=right
@@ -1017,6 +1032,7 @@ same_second:
     call Navigate
     call Navigate2
     call ckeck_selected
+    call ckeck_selected2
     ;call ckeck wineer;mov winner 0;1;2
 ;main loop of game,not to end game
 cmp continue_counter,0
@@ -1252,35 +1268,7 @@ can_moveee:
     mov desired_position,al
 
 ;------CHECK WHITE OR BLACK TO PREVENT DRAW ON HIS PIECES---------
-    mov bl,desired_position
-    mov bh,0
-    cmp selected_piece_type,'a'
-    jae check_w ;want to move white piece
-    cmp selected_piece_type,'Z'
-    jbe check_b ;want to move black piece
-
-    check_w: ;check if white piece exist in desired position
-    cmp squares_container[bx],'a'
-    jae can_not_movee11
-    jmp continue_moving
-
-    can_not_movee11:
-    ; ;reset board to un highlighted if me want wrong move
-    push di
-    mov di,0
-    call draw_board2
-    pop di
-
-    ret ;exit from ckeck_selected
-
-    check_b:
-    cmp squares_container[bx],'Z'
-    ja  continue_moving
-    cmp squares_container[bx],'0'
-    jnz can_not_movee11
-    jmp continue_moving
-    continue_moving:
-
+  ;removed
 ;-------------------------------------------------------
     ;move piece to new position
 ;update time_array of new place set it to 0
@@ -1356,7 +1344,6 @@ notm:
 ret
 ckeck_selected endp
 ;-----------------
-;current_color db 04 ;you'll need to add this var
 Navigate proc
 
     ;wait for user input
@@ -2128,16 +2115,16 @@ soldierr endp
 ;-----------------
 soldierr_b proc
 
-    mov al,current_x
-    mov x_new,al
-    mov ah,current_y
-    mov y_new,ah
+    mov al,current_x2
+    mov x_new2,al
+    mov ah,current_y2
+    mov y_new2,ah
 
-    dec y_new
-    cmp y_new,-1
+    dec y_new2
+    cmp y_new2,-1
     je next1445
-                set_place_available x_new,y_new
-    draw_rectangle x_new,y_new,color_avilable_moves
+                set_place_available x_new2,y_new2
+    draw_rectangle x_new2,y_new2,color_avilable_moves2
 next1445:
 
 ret
@@ -2170,32 +2157,6 @@ draw_piece_by_type proc
         mov si,offset soldier
     not_soldier:
     ;------------
-    cmp selected_piece_type,'T'
-    jne not_b_tabiaa
-        mov si,offset b_tabia
-    not_b_tabiaa:
-    cmp selected_piece_type,'H'
-    jne not_b_horse
-        mov si,offset b_horse
-    not_b_horse:
-    cmp selected_piece_type,'F'
-    jne not_b_fel
-        mov si,offset b_fel
-    not_b_fel:
-    cmp selected_piece_type,'W'
-    jne not_b_wazer
-        mov si,offset b_wazer
-    not_b_wazer:
-    cmp selected_piece_type,'K'
-    jne not_b_king
-        mov si,offset b_king
-    not_b_king:
-    cmp selected_piece_type,'S'
-    jne not_b_soldier
-        mov si,offset b_soldier
-    not_b_soldier:
-
-
 
 mov al,[si]           ;just for storing the piecebackground in piece_background by first pixel
 mov piece_background,al;to know background color of piece
@@ -2237,6 +2198,76 @@ jne l167
 
 ret
 draw_piece_by_type endp
+;-----------------
+draw_piece_by_type2 proc
+ ;check type of piece
+
+    cmp selected_piece_type2,'T'
+    jne not_b_tabiaa
+        mov si,offset b_tabia
+    not_b_tabiaa:
+    cmp selected_piece_type2,'H'
+    jne not_b_horse
+        mov si,offset b_horse
+    not_b_horse:
+    cmp selected_piece_type2,'F'
+    jne not_b_fel
+        mov si,offset b_fel
+    not_b_fel:
+    cmp selected_piece_type2,'W'
+    jne not_b_wazer
+        mov si,offset b_wazer
+    not_b_wazer:
+    cmp selected_piece_type2,'K'
+    jne not_b_king
+        mov si,offset b_king
+    not_b_king:
+    cmp selected_piece_type2,'S'
+    jne not_b_soldier
+        mov si,offset b_soldier
+    not_b_soldier:
+ ;------------
+
+mov al,[si]           ;just for storing the piecebackground in piece_background by first pixel
+mov piece_background2,al;to know background color of piece
+mov ax,20d
+mov bl,sq_cursor_v2
+mov bh,0
+mul bx  ; ax = y * 20
+mov bx,ax
+mov piece_y_end2,bx
+add piece_y_end2,20d
+l1672:
+    mov al,sq_cursor_h2
+    mov ah,0
+    mov di,ax
+    mov ax,40d
+    mul di ;ax = x * 40
+    mov di,ax
+    mov piece_x_end2,di
+    add piece_x_end2,40d ;40d
+    l2672:
+            mov cx,di;column
+
+            mov dx,bx;row
+            mov ax,[si]
+            mov ah,0ch  ;draw pixel
+            cmp piece_background2,al
+            je skip_draww2
+            int 10h
+        skip_draww2:
+
+            inc si
+
+      inc di
+      cmp di,piece_x_end2
+      jne l2672
+inc bx
+cmp bx,piece_y_end2
+jne l1672
+
+ret
+draw_piece_by_type2 endp
 ;-----------------
 ;----part1--------
 Users_screen   PROC  
@@ -2327,7 +2358,8 @@ ret
        
     
 second endp
-;-----------------
+;-----end part 1-----------
+
 Navigate2 proc
 
     ;wait for user input
@@ -2416,6 +2448,7 @@ Navigate2 proc
     cmp direction2,2
     jz go_left2
     cmp direction2,3
+    ;jz go_up2
     jnz skip129
     jmp go_up2
     skip129:
@@ -2492,5 +2525,176 @@ this_sq_must_be_col1_or2 proc
         mov current_color,bl
     end_col_check:
 this_sq_must_be_col1_or2 endp
+;-----------------
+ckeck_selected2 proc
+;hi man
+    cmp key,'r'
+    je xcx2
+    jmp notr
+    xcx2:
+
+    mov al,sq_cursor_h2
+    mov selected_piece_x2,al
+    mov al,sq_cursor_v2
+    mov selected_piece_y2,al
+
+    mov bl,8
+    mov al,selected_piece_y2
+    mul bl;al=y*8
+    add al,selected_piece_x2
+    mov selected_piece_position2,al
+        draw_rectangle selected_piece_x2,selected_piece_y2,selected_pos_color2
+
+        mov al,selected_piece_x2
+        mov current_x2,al
+        mov al,selected_piece_y2
+        mov current_y2,al
+
+    mov bl,selected_piece_position2
+    mov bh,0
+    mov cl,squares_container[bx]
+    mov selected_piece_type2,cl
+        ;call wazerr,horsee,feeel,kingg 7sb ay piece selected;;;;;;;;;;;;;;;;;;
+    ;check which type of piece is selected
+        ;------------
+        cmp selected_piece_type2,'T'
+        jne not_b_tabiaa2b
+            ;call tabiaa_b
+        not_b_tabiaa2b:
+        cmp selected_piece_type2,'H'
+        jne not_b_horse2b
+            ;call horsee_b
+        not_b_horse2b:
+        cmp selected_piece_type2,'F'
+        jne not_b_fel2b
+            ;call feeel_b
+        not_b_fel2b:
+        cmp selected_piece_type2,'W'
+        jne not_b_wazer2b
+            ;call wazerr_b
+        not_b_wazer2b:
+        cmp selected_piece_type2,'K'
+        jne not_b_king2b
+            ;call kingg_b
+        not_b_king2b:
+        cmp selected_piece_type2,'S'
+        jne not_b_soldier2b
+            call soldierr_b
+        not_b_soldier2b:
+    ;------------
+notr:
+    ;check if want to move "m key pressed"
+    cmp key,'n'
+    je xcxpp2
+    jmp notn
+    xcxpp2:;key is m check if can move to new position
+;check if can move "time passed from last move > 3 seconds"
+    mov bl,selected_piece_position2
+    mov bh,0
+    mov cl,time_array[bx]
+    cmp cl,3
+    ;JB _3seconds_not_passed2;don't move or do any thing
+    ;JAE vvv
+    je vvv2
+    jmp _3seconds_not_passed2
+    vvv2:
+
+    can_move_or_not sq_cursor_h2,sq_cursor_v2  ;al=1 if can move
+    cmp al,1
+    ;jne can_not_movee2 ;0 can't move
+    je can_moveee2
+    jmp can_not_movee2;not equal 1 don't move
+can_moveee2:
+    reset_available_places
+    ;know which piece to draw
+    ;mov selected_piece_type2,squares_container[selected_piece_position2]
+    mov bl,selected_piece_position2
+    mov bh,0
+    mov cl,squares_container[bx]
+    mov selected_piece_type2,cl
+
+    ;check if it is white or black------------------------------------
+    mov bl,8
+    mov al,sq_cursor_v2
+    mul bl;al=y*8
+    add al,sq_cursor_h2
+    mov desired_position2,al
+
+;------CHECK WHITE OR BLACK TO PREVENT DRAW ON HIS PIECES---------
+ ;removed
+;-------------------------------------------------------
+    ;move piece to new position
+;update time_array of new place set it to 0
+    mov bl,desired_position2
+    mov bh,0
+    mov time_array[bx],0
+
+    mov bl,selected_piece_position2;old position timer reset to 3 to enable moves in it
+    mov bh,0
+    mov time_array[bx],3
+
+    ;call move_piece
+    check_square_color sq_cursor_h2,sq_cursor_v2 ;al=0 if color1
+    cmp al,0
+    ;jne color_is_2_b ;1 if color2
+    je color_is_1_b
+    jmp color_is_2_b
+color_is_1_b:
+    ;color is 1
+    draw_rectangle_not_trans selected_piece_x2,selected_piece_y2,color1
+    ;draw_piece horse,sq_cursor_h2,sq_cursor_v2
+    call draw_piece_by_type2
+;update squares_container---
+    mov bh,0
+    mov bl,desired_position2
+    mov si,bx                       ;si = desired_position2
+    mov bl,selected_piece_position2 ;bx = selected_piece_position2
+
+    mov squares_container[bx],'0'
+    mov al,selected_piece_type2
+    mov squares_container[si],al
+;------------------------s
+    ;desired_position2,selected_piece_position2
+    ;reset board to un highlighted
+    push di
+    mov di,0
+    call draw_board2
+    pop di
+    
+    jmp color_is_1_b_and_drawn2
+color_is_2_b:
+    draw_rectangle_not_trans selected_piece_x2,selected_piece_y2,color2
+    ;draw_piece horse,sq_cursor_h2,sq_cursor_v2
+    call draw_piece_by_type2
+;update squares_container---
+    mov bh,0
+    mov bl,desired_position2
+    mov si,bx                       ;si = desired_position2
+    mov bl,selected_piece_position2 ;bx = selected_piece_position2
+
+    mov squares_container[bx],'0'
+    mov al,selected_piece_type2
+    mov squares_container[si],al
+;------
+    ;reset board to un highlighted
+    push di
+    mov di,0
+    call draw_board2
+    pop di
+
+color_is_1_b_and_drawn2:
+can_not_movee2:
+_3seconds_not_passed2:
+    ;reset board to un highlighted if me want wrong move
+    push di
+    mov di,0
+    call draw_board2
+    pop di
+notn:
+    ;draw_rectangle sq_cursor_h,sq_cursor_v,sel_color
+    draw_rectangle sq_cursor_h2,sq_cursor_v2,sel_color2
+
+ret
+ckeck_selected2 endp
 ;-----------------
 end main
