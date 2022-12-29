@@ -2143,7 +2143,13 @@ soldierr proc
 
     inc y_new
     cmp y_new,8
-    je next144
+    jne sold_cont
+    jmp next144
+    sold_cont:
+    get_0to64_from_xy x_new,y_new ;bl=0to64
+        white_or_blak_piece squares_container[bx]
+        cmp piece_color,'w'
+        je next144
                 set_place_available x_new,y_new
     draw_rectangle x_new,y_new,color_avilable_moves
 next144:
@@ -2160,7 +2166,13 @@ soldierr_b proc
 
     dec y_new
     cmp y_new,-1
-    je next1445
+    jne b_sold_cont
+    jmp next1445
+    b_sold_cont:
+    get_0to64_from_xy x_new,y_new ;bl=0to64
+        white_or_blak_piece squares_container[bx]
+        cmp piece_color,'w'
+        je next1445
                 set_place_available x_new,y_new
     draw_rectangle x_new,y_new,color_avilable_moves
 next1445:
