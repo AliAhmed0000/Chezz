@@ -325,7 +325,7 @@ endm draw_piece
 draw_rect_trans MACRO color
     local l1,l2,l3,end
         mov dx,di
-        mov bl,es:[di]
+        mov bl,es:[di];bl = old color of square
         mov w_counter,40
         mov l_counter,20
         mov al,color
@@ -447,12 +447,13 @@ local l111,l222
     jne l111
   endm draw_rectangle_not_trans
 ;------------
-get_0to64_from_xy MACRO x_07,y_07 ; result"bl" = from 0 to 64
+get_0to64_from_xy MACRO x_07,y_07 ;to make u use [bx] bh = 0 ,result"bl" = from 0 to 64
     mov bl,8
     mov al,y_07
     mul bl;al=y*8
     add al,x_07
     mov bl,al   ;bl = from 0 to 64
+    mov bh,0
 endm get_0to64_from_xy
 ;------------
 set_place_available MACRO x_place,y_place
@@ -548,11 +549,29 @@ get_rectcolor_by_xy macro
             int 10H     ; AL = COLOR of exisiting pixel
 endm get_rectcolor_by_xy
 ;------------
+white_or_blak_piece macro piecee_type;piece_color = 'w' or 'b' or '0'
+    cmp piecee_type,'a'
+    jb not_whitee
+    mov piece_color,'w';white
+    jmp end_white_or_blak_piece
+    not_whitee:
+
+    cmp piecee_type,'0'
+    jne not_zeroo
+    mov piece_color,'0'
+    jmp end_white_or_blak_piece
+    not_zeroo:
+
+    mov piece_color,'b';black
+
+end_white_or_blak_piece:
+endm white_or_blak_piece
+;------------
 .model small
 .stack 64
 .data
 
-;some variables
+;some constant variables for the game
   start    dw 0    ;position of the starting point(pixel)
   w       dw 40   ;width of the square
   len     dw 20   ; length (height) of each row of squares
@@ -563,14 +582,25 @@ endm get_rectcolor_by_xy
   no_rows db 8    ; number of rows to be drawn
   no_sqs db 8
   ;------------------end of Background vars
+;-------navigation
   sel_color db 0ch ;color of the Navigateing square
   continue_counter db 1
   global_cursor db 0; 0-63
-  sq_cursor_h db 0; horizontal
-  sq_cursor_v db 0; vertical
+  sq_cursor_h db 4; horizontal initialized position
+  sq_cursor_v db 0; vertical initialized position
   step_size_row db 40; to traverse in a row
   step_size_col dw 6400d; to traverse in a column
   direction db 0
+  key db ? ;key pressed for logic
+  ;----------navigation 2
+  sel_color2 db 0bh ;color of the Navigateing square
+  continue_counter2 db 1
+  global_cursor2 db 0; 0-63
+  sq_cursor_h2 db 4; horizontal initialized position
+  sq_cursor_v2 db 7; vertical initialized position
+  direction2 db 0
+  key2 db ? ;key pressed for logic
+  ;one var in move piece also 
 square_info LABEL BYTE
     ;first row
     db 6 ;sq_0  piece on it
@@ -599,16 +629,23 @@ square_info LABEL BYTE
  selected_piece_y db 0
  selected_piece_position db ? ;selected piece
  selected_pos_color db 7
- key db ? ;key pressed for logic
  selected_piece_type db ? ;type of piece
  desired_position db ?
+ selected_piece_color db ? ;color of piece
 ;------------move piece---------------;
  x_new db 0
  y_new db 0
  current_x db 0
  current_y db 0
  color_avilable_moves db 55
- current_color db 04;color 1  for navigation
+ current_color db 04;color 1  for navigation ;initializet square color of selector
+ ;-------move piece 2
+  x_new2 db 0
+  y_new2 db 0
+  current_x2 db 0
+  current_y2 db 0
+  color_avilable_moves2 db 55
+  current_color2 db 02;color 1  for navigation ;initializet square color of selector
 ;------------get_rectcolor_by_xy------;
  x_rect_avilable db 0
  y_rect_avilable db 0
@@ -889,6 +926,8 @@ square_info LABEL BYTE
  db 8 dup('0')
  db 8 dup('S')
  db "THFWKFHT"
+;-------------check piece_type macro-----------;
+ piece_color db ?;to store the piece type
 ;--------------part1-------------------------;
   string1 db "To start chatting press F1",'$'
   string2 db "To start the game press F2",'$'
@@ -909,7 +948,7 @@ square_info LABEL BYTE
 
  lower_initial_point db ?;max initial point is 99 deciamls (i.e less 8 bits)
 
- key1_pressed db ?;to store the key pressed in part1
+ key1_pressed db 2;0 pleaaase   ;to store the key pressed in part1
 ;-------------------------------------------------
 
 .code
@@ -917,26 +956,26 @@ main proc far
     mov ax,@data
     mov ds,ax
 ;-------part1-----------------;
-           clearScrean
-           changetotxt
+           ;clearScrean
+           ;changetotxt
 
-           call Users_screen
-           call second
+           ;call Users_screen
+           ;call second
 
-           mov key1_pressed,al;from part1
+           ;mov key1_pressed,al;from part1
 ;-----------------------------;
+    ;initialization
+        cmp key1_pressed,2 ;if F2 is pressed enter game
+        je don_not_jump
+        jmp skip_game
+        don_not_jump:
 
-    cmp key1_pressed,2 ;if F2 is pressed enter game
-    je don_not_jump
-    jmp skip_game
-    don_not_jump:
+        mov ax,0A000h
+        mov es,ax
 
-    mov ax,0A000h
-    mov es,ax
-
-    mov ah,0
-    mov al,13h
-    int 10h
+        mov ah,0
+        mov al,13h
+        int 10h
 
     mov di,0
 
@@ -945,8 +984,11 @@ main proc far
 
     call initialize_pieces
 
-    mov di,0
+    mov di,160        ;where you want to initialize this selector
     draw_rect_trans sel_color
+
+    mov di,44960d        ;where you want to initialize this selector
+    draw_rect_trans sel_color2
 
     time ;set current_second
 continue_label:
@@ -959,7 +1001,21 @@ continue_label:
     update_time_of_all
 same_second:
 
+    ;wait for user input
+  CHECK_ifkeypressed:
+    mov ah,1
+    int 16h;0 if no key pressed
+    jnz key_pressed
+    mov key,'0';set key to 0
+                jmp continue_label;        remove me if error
+  key_pressed:
+    mov ah,0 ;consume buffer
+    int 16h ;w=up,s=down,a=left,d=right
+    mov key,al
+
+
     call Navigate
+    call Navigate2
     call ckeck_selected
     ;call ckeck wineer;mov winner 0;1;2
 ;main loop of game,not to end game
@@ -1046,6 +1102,7 @@ draw_board proc
 draw_board endp
 ;-----------------
 draw_board2 proc
+
 mov start,0
 mov no_rows,8
 mov no_sqs,8
@@ -1198,11 +1255,11 @@ can_moveee:
     mov bl,desired_position
     mov bh,0
     cmp selected_piece_type,'a'
-    jae check_w
+    jae check_w ;want to move white piece
     cmp selected_piece_type,'Z'
-    jbe check_b
+    jbe check_b ;want to move black piece
 
-    check_w:
+    check_w: ;check if white piece exist in desired position
     cmp squares_container[bx],'a'
     jae can_not_movee11
     jmp continue_moving
@@ -1213,7 +1270,9 @@ can_moveee:
     mov di,0
     call draw_board2
     pop di
-    ret
+
+    ret ;exit from ckeck_selected
+
     check_b:
     cmp squares_container[bx],'Z'
     ja  continue_moving
@@ -1299,19 +1358,22 @@ ckeck_selected endp
 Navigate proc
 
     ;wait for user input
-  CHECK_ifkeypressed:
-    mov ah,1
-    int 16h;0 if no key pressed
-    jnz key_pressed
-    mov key,'0';set key to 0
-    ret
-  key_pressed:
-    mov ah,0 ;consume buffer
-    int 16h ;w=up,s=down,a=left,d=right
-    mov key,al
+
+        ;   CHECK_ifkeypressed:
+        ;     mov ah,1
+        ;     int 16h;0 if no key pressed
+        ;     jnz key_pressed
+        ;     mov key,'0';set key to 0
+        ;     ret
+        ;   key_pressed:
+        ;     mov ah,0 ;consume buffer
+        ;     int 16h ;w=up,s=down,a=left,d=right
+        ;     mov key,al
+
     ;if al == ascii of any of these letters
     ;it should do a distinct reaction
     ;al == d (right)
+    mov al,key
     cmp al,'d';;read ascii of 'd' from al
     jz cond_go_right
     cmp al,'a'
@@ -1468,6 +1530,28 @@ get_current_color proc
             mov current_color,al
             ret
 get_current_color endp
+;-----------------
+get_current_color2 proc
+ ;get row from 0-7 to 0-199
+    mov ax,20d
+    mov bl,sq_cursor_v2
+    mov bh,0
+    mul bx  ; ax = y * 20
+    mov bx,ax
+    ;get column from 0-7 to 0-319
+    mov ax,40d
+    mov cl,sq_cursor_h2
+    mov ch,0
+    mul cx  ; ax = x * 40
+    mov cx,ax
+            ;get color of existing pixels
+            mov ah,0Dh
+            ;mov cx,dx;column
+            mov dx,bx;row
+            int 10H     ; AL = COLOR of exisiting pixel
+            mov current_color2,al
+            ret
+get_current_color2 endp
 ;-----------------
 wazerr proc
     mov al,current_x
@@ -1756,9 +1840,22 @@ feeel proc
         inc x_new
         inc y_new
         cmp x_new,8
-        je exit1
+        jne f0
+        jmp exit1
+        f0:
         cmp y_new,8
+        ;jne f1
+        je h232
+        jmp f1
+        h232:
+        jmp exit1
+        f20:
+
+        get_0to64_from_xy x_new,y_new ;bl=0to64
+        white_or_blak_piece squares_container[bx]
+        cmp piece_color,'w'
         je exit1
+
           set_place_available x_new,y_new
           draw_rectangle x_new,y_new,color_avilable_moves;color_avilable_moves is the highlight color
     jmp l1
@@ -2079,7 +2176,7 @@ draw_piece_by_type proc
 
 
 
-mov al,[si]           ;just for storing the piece in piece_background by first pixel
+mov al,[si]           ;just for storing the piecebackground in piece_background by first pixel
 mov piece_background,al;to know background color of piece
 mov ax,20d
 mov bl,sq_cursor_v
@@ -2209,5 +2306,157 @@ ret
        
     
 second endp
+;-----------------
+Navigate2 proc
 
+    ;wait for user input
+        ;   CHECK_ifkeypressed2:
+        ;     mov ah,1
+        ;     int 16h;0 if no key pressed
+        ;     jnz key_pressed2
+        ;     mov key2,'0';set key to 0
+        ;     ret
+        ;   key_pressed2:
+        ;     mov ah,0 ;consume buffer
+        ;     int 16h ;w=up,s=down,a=left,d=right
+        ;     mov key2,al
+    ;if al == ascii of any of these letters
+    ;it should do a distinct reaction
+    ;al == d (right)
+    mov al,key
+    cmp al,'h';;read ascii of 'd' from al
+    jz cond_go_right22
+    cmp al,'f'
+    jz cond_go_left2
+    cmp al,'t'
+    jz cond_go_up2
+    cmp al,'g'
+    jz cond_l_go_down22
+
+    exitt2: ret
+    ;-----------------------------------
+
+    cond_go_right22:
+    mov direction2,1
+    cmp sq_cursor_h2,7;check if cursor is at the end of the row
+    jz exitt2
+    jmp start_nav2
+
+    cond_go_left2:
+    mov direction2,2
+    cmp sq_cursor_h2,0
+    jz exitt2
+    jmp start_nav2
+
+    cond_go_up2:
+    mov direction2,3
+    cmp sq_cursor_v2,0
+    jz exitt2
+    jmp start_nav2
+
+    cond_l_go_down22:
+    mov direction2,4
+    cmp sq_cursor_v2,7
+    jz exitt2
+    jmp start_nav2
+
+
+    start_nav2:
+    push ax
+
+    mov ax,0
+    mov cx,0;;;;;;
+    mov al,sq_cursor_h2
+    mul step_size_row ;ax = sq_cursor_h2 * step_size_row"40"
+    mov di,ax
+    mov cl,al;;;;;
+
+    mov ax,0
+    mov al,sq_cursor_v2
+    mul step_size_col;ax = sq_cursor_v2 * step_size_col"6400"
+    add di,ax
+    add cl,al
+    
+    
+            
+    push di
+    draw_rect_trans current_color2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; mov al,color1
+    ; mov bl,color2
+    ; xchg al,bl
+    ; mov color1,al
+    ; mov color2,bl
+    pop di
+
+
+    pop ax
+    cmp direction2,1;;read ascii of 'd' from al
+    jz go_right2
+    cmp direction2,2
+    jz go_left2
+    cmp direction2,3
+    jnz skip129
+    jmp go_up2
+    skip129:
+    cmp direction2,4
+    jz l_go_down2
+    ;;;;;;;;;;;;;;;;;;;;;;
+    go_right2:
+    cmp sq_cursor_h2,7
+    jz jump2
+
+    inc global_cursor2
+
+    inc sq_cursor_h2
+
+    call get_current_color2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    add di,40d;next columnin same row
+    push di
+    draw_rect_trans sel_color2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    pop di
+    jump2:jmp end_nav2
+    l_go_down2: jmp go_down2
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;
+    go_left2:
+    cmp sq_cursor_h2,0
+    jz jump2
+    dec global_cursor2
+
+    dec sq_cursor_h2
+    call get_current_color2 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    sub di,40d
+    push di
+    draw_rect_trans sel_color2 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    pop di
+    jmp end_nav2
+    ;;;;;;;;;;;;;;;;;;;;;;;;
+    go_up2:
+    cmp sq_cursor_v2,0
+    jz jump2
+
+    sub global_cursor2,8
+    dec sq_cursor_v2
+    call get_current_color2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    sub di,6400d
+    push di
+    draw_rect_trans sel_color2 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    pop di
+    jmp end_nav2
+    ;;;;;;;;;;;;;;;;;;;;;;;;
+    go_down2:
+    cmp sq_cursor_v2,7
+    jz end_nav2
+
+    add global_cursor2,8
+
+    inc sq_cursor_v2
+    call get_current_color2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    add di,6400d
+    push di
+    draw_rect_trans sel_color2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    pop di
+    end_nav2:
+    ret
+Navigate2 endp
+;-----------------
 end main
