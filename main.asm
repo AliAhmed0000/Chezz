@@ -1319,7 +1319,7 @@ color_is_1:
     mov di,0
     call draw_board2
     pop di
-
+    
     jmp color_is_1_and_drawn
 color_is_2:
     draw_rectangle_not_trans selected_piece_x,selected_piece_y,color2
@@ -1350,6 +1350,8 @@ _3seconds_not_passed:
     call draw_board2
     pop di
 notm:
+    draw_rectangle sq_cursor_h,sq_cursor_v,sel_color
+    draw_rectangle sq_cursor_h2,sq_cursor_v2,sel_color2
 
 ret
 ckeck_selected endp
@@ -1460,6 +1462,8 @@ Navigate proc
     inc sq_cursor_h
 
     call get_current_color
+    ;call this_sq_must_be_col1_or2
+
     add di,40d;next columnin same row
     push di
     draw_rect_trans sel_color
@@ -1845,7 +1849,7 @@ feeel proc
         f0:
         cmp y_new,8
         ;jne f1
-        je h232
+        jne h232
         jmp f1
         h232:
         jmp exit1
@@ -2473,5 +2477,18 @@ Navigate2 proc
     end_nav2:
     ret
 Navigate2 endp
+;-----------------
+this_sq_must_be_col1_or2 proc
+        check_square_color sq_cursor_h,sq_cursor_v
+        cmp al,0
+        jne colr2
+        mov bl,color1
+        mov current_color,bl
+        jmp end_col_check
+    colr2:
+        mov bl,color2
+        mov current_color,bl
+    end_col_check:
+this_sq_must_be_col1_or2 endp
 ;-----------------
 end main
