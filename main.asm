@@ -943,6 +943,8 @@ square_info LABEL BYTE
  db "THFWKFHT"
 ;-------------check piece_type macro-----------;
  piece_color db ?;to store the piece type
+;-------------some one winned------------------;
+ winner db 0;0 no one winned yet , 1 if white winned , 2 if black winned
 ;--------------part1-------------------------;
   string1 db "To start chatting press F1",'$'
   string2 db "To start the game press F2",'$'
@@ -1041,8 +1043,9 @@ same_second:
     call ckeck_selected2
     ;call ckeck wineer;mov winner 0;1;2
 ;main loop of game,not to end game
-cmp continue_counter,0
-jnz continue_label
+;if someone winned i mov winner 1;2 and mov continue_counter 0 to end game you can use jmp someone_wins and check winner in loop and jmp someone_wins instead
+cmp continue_counter,1
+je continue_label
 ;--------------------------end of game---------------------;
 someone_wins:
 
@@ -1211,7 +1214,7 @@ ckeck_selected proc
         not_soldier2:
     ;------------
 notq:
-    ;check if want to move "m key pressed"
+;check if want to move "m key pressed"
     cmp key,'m'
     je xcxpp
     jmp notm
@@ -1248,8 +1251,6 @@ can_moveee:
     add al,sq_cursor_h
     mov desired_position,al
 
-;------CHECK WHITE OR BLACK TO PREVENT DRAW ON HIS PIECES---------
-  ;removed
 ;-------------------------------------------------------
     ;move piece to new position
 ;update time_array of new place set it to 0
@@ -1276,24 +1277,8 @@ color_is_1:
 
     mov cl,color1
     mov current_color,cl;to make navigate draw the orginal color of place instead of the highlight color
-;update squares_container---
-    mov bh,0
-    mov bl,desired_position
-    mov si,bx                       ;si = desired_position
-    mov bl,selected_piece_position ;bx = selected_piece_position
 
-    mov squares_container[bx],'0'
-    mov al,selected_piece_type
-    mov squares_container[si],al
-;------------------------s
-    ;desired_position,selected_piece_position
-    ;reset board to un highlighted
-    push di
-    mov di,0
-    call draw_board2
-    pop di
-    
-    jmp color_is_1_and_drawn
+jmp color_is_1_and_drawn
 color_is_2:
     draw_rectangle_not_trans selected_piece_x,selected_piece_y,color2
     ;draw_piece horse,sq_cursor_h,sq_cursor_v
@@ -1301,26 +1286,40 @@ color_is_2:
     call draw_piece_by_type
     mov cl,color2
     mov current_color,cl
-;update squares_container---
+
+color_is_1_and_drawn:
+color_is_2_and_drawn:
+;moved piece successfully
+;check if white wins *****************************************************
     mov bh,0
-    mov bl,desired_position
-    mov si,bx                       ;si = desired_position
+    mov bl,desired_position ;bx = desired_position
+    cmp squares_container[bx],'K';balck king you someone_wins
+    jne white_has_not_won
+    mov winner,1;white winned
+    mov continue_counter,0;exit game white wins
+ white_has_not_won:
+;update squares_container-**************************************************--
+
+    mov si,bx                       ;si = desired_position ,bx = desired_position ,bh=0
     mov bl,selected_piece_position ;bx = selected_piece_position
 
     mov squares_container[bx],'0'
     mov al,selected_piece_type
     mov squares_container[si],al
-;------
+;reset board to un highlighted *******************************************
+    ;desired_position,selected_piece_position
     ;reset board to un highlighted
     push di
     mov di,0
     call draw_board2
     pop di
+    
 
-color_is_1_and_drawn:
+
 can_not_movee:
 _3seconds_not_passed:
-    ;reset board to un highlighted if me want wrong move
+  ;reset board to un highlighted if me want wrong move
+    ;you can remove below if you want to keep the highlighted board
     push di
     mov di,0
     call draw_board2
@@ -2375,9 +2374,62 @@ soldierr proc
         white_or_blak_piece squares_container[bx]
         cmp piece_color,'w'
         je next144
+        cmp piece_color,'b'
+        je next144
                 set_place_available x_new,y_new
     draw_rectangle x_new,y_new,color_avilable_moves
 next144:
+
+    mov al,current_x
+    mov x_new,al
+    mov ah,current_y
+    mov y_new,ah
+
+    inc y_new
+    dec x_new
+    cmp y_new,8
+    jne sold_cont2318
+    jmp next144238
+    sold_cont2318:
+    cmp x_new,-1
+    jne sold_cont238
+    jmp next144238
+    sold_cont238:
+    get_0to64_from_xy x_new,y_new ;bl=0to64
+        white_or_blak_piece squares_container[bx]
+        cmp piece_color,'w'
+        je next144238
+        cmp piece_color,'0'
+        je next144238
+                set_place_available x_new,y_new
+    draw_rectangle x_new,y_new,color_avilable_moves
+next144238:
+
+
+    mov al,current_x
+    mov x_new,al
+    mov ah,current_y
+    mov y_new,ah
+
+    inc y_new
+    inc x_new
+    cmp y_new,8
+    jne sold_cont23157
+    jmp next1442357
+    sold_cont23157:
+    cmp x_new,8
+    jne sold_cont2357
+    jmp next1442357
+    sold_cont2357:
+    get_0to64_from_xy x_new,y_new ;bl=0to64
+        white_or_blak_piece squares_container[bx]
+        cmp piece_color,'w'
+        je next1442357
+        cmp piece_color,'0'
+        je next1442357
+                set_place_available x_new,y_new
+    draw_rectangle x_new,y_new,color_avilable_moves
+next1442357:
 
 ret
 soldierr endp
@@ -2611,7 +2663,6 @@ ret
     
 second endp
 ;-----end part 1-----------
-
 Navigate2 proc
 
     ;wait for user input
@@ -2811,11 +2862,11 @@ ckeck_selected2 proc
         ;------------
         cmp selected_piece_type2,'T'
         jne not_b_tabiaa2b
-            ;call tabiaa_b
+            call tabiaa_b
         not_b_tabiaa2b:
         cmp selected_piece_type2,'H'
         jne not_b_horse2b
-            ;call horsee_b
+            call horsee_b
         not_b_horse2b:
         cmp selected_piece_type2,'F'
         jne not_b_fel2b4
@@ -2827,7 +2878,7 @@ ckeck_selected2 proc
         not_b_wazer2b:
         cmp selected_piece_type2,'K'
         jne not_b_king2b
-            ;call kingg_b
+            call kingg_b
         not_b_king2b:
         cmp selected_piece_type2,'S'
         jne not_b_soldier2b
@@ -2893,15 +2944,35 @@ can_moveee2:
     jmp color_is_2_b
 color_is_1_b:
     ;color is 1
-    draw_rectangle_not_trans selected_piece_x2,selected_piece_y2,color1
+    draw_rectangle_not_trans selected_piece_x2,selected_piece_y2,color1 ;draw old place
     ;draw_piece horse,sq_cursor_h2,sq_cursor_v2
     call draw_piece_by_type2
 
     mov cl,color1
     mov current_color2,cl;to make navigate draw the orginal color of place instead of the highlight color
-;update squares_container---
+
+jmp color_is_1_b_and_drawn2
+color_is_2_b:
+    draw_rectangle_not_trans selected_piece_x2,selected_piece_y2,color2
+    ;draw_piece horse,sq_cursor_h2,sq_cursor_v2
+    call draw_piece_by_type2
+
+    mov cl,color2
+    mov current_color2,cl;to make navigate draw the orginal color of place instead of the highlight color
+
+color_is_1_b_and_drawn2:
+color_is_2_b_and_drawn2:
+;some piece moved successfully
+;check if black wins *****************************************************
     mov bh,0
-    mov bl,desired_position2
+    mov bl,desired_position2 ;bx = desired_position
+    cmp squares_container[bx],'k';white king is dead
+    jne black_has_not_won
+    mov winner,2;black winned
+    mov continue_counter,0;exit game black wins
+ black_has_not_won:
+
+;update squares_container---
     mov si,bx                       ;si = desired_position2
     mov bl,selected_piece_position2 ;bx = selected_piece_position2
 
@@ -2916,32 +2987,6 @@ color_is_1_b:
     call draw_board2
     pop di
     
-    jmp color_is_1_b_and_drawn2
-color_is_2_b:
-    draw_rectangle_not_trans selected_piece_x2,selected_piece_y2,color2
-    ;draw_piece horse,sq_cursor_h2,sq_cursor_v2
-    call draw_piece_by_type2
-
-    mov cl,color2
-    mov current_color2,cl;to make navigate draw the orginal color of place instead of the highlight color
-
-;update squares_container---
-    mov bh,0
-    mov bl,desired_position2
-    mov si,bx                       ;si = desired_position2
-    mov bl,selected_piece_position2 ;bx = selected_piece_position2
-
-    mov squares_container[bx],'0'
-    mov al,selected_piece_type2
-    mov squares_container[si],al
-;------
-    ;reset board to un highlighted
-    push di
-    mov di,0
-    call draw_board2
-    pop di
-
-color_is_1_b_and_drawn2:
 can_not_movee2:
 _3seconds_not_passed2:
     ;reset board to un highlighted if me want wrong move
@@ -3172,7 +3217,7 @@ soldierr_b proc
     mov y_new2,ah
 
     dec y_new2
-    cmp y_new2,8
+    cmp y_new2,-1
     jne sold_cont2
     jmp next1442
     sold_cont2:
@@ -3180,9 +3225,63 @@ soldierr_b proc
         white_or_blak_piece squares_container[bx]
         cmp piece_color,'b'
         je next1442
+        cmp piece_color,'w'
+        je next1442
+        
                 set_place_available x_new2,y_new2
     draw_rectangle x_new2,y_new2,color_avilable_moves2
 next1442:
+
+    mov al,current_x2
+    mov x_new2,al
+    mov ah,current_y2
+    mov y_new2,ah
+
+    dec y_new2
+    dec x_new2
+    cmp y_new2,-1
+    jne sold_cont231
+    jmp next14423
+    sold_cont231:
+    cmp x_new2,-1
+    jne sold_cont23
+    jmp next14423
+    sold_cont23:
+    get_0to64_from_xy x_new2,y_new2 ;bl=0to64
+        white_or_blak_piece squares_container[bx]
+        cmp piece_color,'b'
+        je next14423
+        cmp piece_color,'0'
+        je next14423
+                set_place_available x_new2,y_new2
+    draw_rectangle x_new2,y_new2,color_avilable_moves2
+next14423:
+
+
+    mov al,current_x2
+    mov x_new2,al
+    mov ah,current_y2
+    mov y_new2,ah
+
+    dec y_new2
+    inc x_new2
+    cmp y_new2,-1
+    jne sold_cont2315
+    jmp next144235
+    sold_cont2315:
+    cmp x_new2,8
+    jne sold_cont235
+    jmp next144235
+    sold_cont235:
+    get_0to64_from_xy x_new2,y_new2 ;bl=0to64
+        white_or_blak_piece squares_container[bx]
+        cmp piece_color,'b'
+        je next144235
+        cmp piece_color,'0'
+        je next144235
+                set_place_available x_new2,y_new2
+    draw_rectangle x_new2,y_new2,color_avilable_moves2
+next144235:
 
 ret
 soldierr_b endp
@@ -3309,5 +3408,498 @@ exit42:
 
 ret
 feeel_b endp
+;-----------------
+tabiaa_b proc
+
+    mov al,current_x2
+    mov x_new2,al
+    mov ah,current_y2
+    mov y_new2,ah
+
+    l1666:
+        inc x_new2
+        cmp x_new2,8
+        jne tab_cont00
+        jmp exit1666
+        tab_cont00:
+        get_0to64_from_xy x_new2,y_new2 ;bl=0to64
+        white_or_blak_piece squares_container[bx]
+        cmp piece_color,'b'
+        je exit1666
+                set_place_available x_new2,y_new2
+          draw_rectangle x_new2,y_new2,color_avilable_moves2;color_avilable_moves is the highlight color
+            
+            cmp piece_color,'w'
+            je exit1666
+    jmp l1666
+exit1666:
+
+    mov al,current_x2
+    mov x_new2,al
+    mov ah,current_y2
+    mov y_new2,ah
+
+    l2666:
+        dec x_new2
+        cmp x_new2,-1
+        jne tab_cont11
+        jmp exit2666
+        tab_cont11:
+        get_0to64_from_xy x_new2,y_new2 ;bl=0to64
+        white_or_blak_piece squares_container[bx]
+        cmp piece_color,'b'
+        je exit2666
+                        set_place_available x_new2,y_new2
+          draw_rectangle x_new2,y_new2,color_avilable_moves2;color_avilable_moves is the highlight color
+      
+            cmp piece_color,'w'
+            je exit2666
+    jmp l2666
+exit2666:
+
+    mov al,current_x2
+    mov x_new2,al
+    mov ah,current_y2
+    mov y_new2,ah
+
+    l3666:
+        inc y_new2
+        cmp y_new2,8
+        jne tab_cont22
+        jmp exit3666
+        tab_cont22:
+        get_0to64_from_xy x_new2,y_new2 ;bl=0to64
+        white_or_blak_piece squares_container[bx]
+        cmp piece_color,'b'
+        je exit3666
+                        set_place_available x_new2,y_new2
+          draw_rectangle x_new2,y_new2,color_avilable_moves2;color_avilable_moves is the highlight color
+      
+            cmp piece_color,'w'
+            je exit3666
+    jmp l3666
+exit3666:
+
+    mov al,current_x2
+    mov x_new2,al
+    mov ah,current_y2
+    mov y_new2,ah
+
+    l4666:
+        dec y_new2
+        cmp y_new2,-1
+        jne tab_cont33
+        jmp exit4666
+        tab_cont33:
+        get_0to64_from_xy x_new2,y_new2 ;bl=0to64
+        white_or_blak_piece squares_container[bx]
+        cmp piece_color,'b'
+        je exit4666
+                        set_place_available x_new2,y_new2
+          draw_rectangle x_new2,y_new2,color_avilable_moves2;color_avilable_moves is the highlight color
+      
+            cmp piece_color,'w'
+            je exit4666
+    jmp l4666
+exit4666:
+
+ret
+tabiaa_b endp
+;-----------------
+horsee_b proc
+    mov al,current_x2
+    mov x_new2,al
+    mov ah,current_y2
+    mov y_new2,ah
+
+        inc x_new2
+        inc y_new2
+        cmp y_new2,8
+        jne h112
+        jmp exit200
+        h112:
+        inc y_new2
+        cmp x_new2,8
+        jne h122
+        jmp exit200
+        h122:
+        cmp y_new2,8
+        jne h_cont00
+        jmp exit200
+        h_cont00:
+        get_0to64_from_xy x_new2,y_new2 ;bl=0to64
+        white_or_blak_piece squares_container[bx]
+        cmp piece_color,'b'
+        je exit200
+          set_place_available x_new2,y_new2
+          draw_rectangle x_new2,y_new2,color_avilable_moves2;color_avilable_moves2 is the highlight color
+exit200:
+
+    mov al,current_x2
+    mov x_new2,al
+    mov ah,current_y2
+    mov y_new2,ah
+
+        dec x_new2
+        dec y_new2
+        cmp y_new2,-1
+        jne h212
+        jmp exit212
+        h212:
+        dec y_new2
+        cmp x_new2,-1
+        jne h222
+        jmp exit212
+        h222:
+        cmp y_new2,-1
+        jne h_cont10
+        jmp exit212
+        h_cont10:
+        get_0to64_from_xy x_new2,y_new2 ;bl=0to64
+        white_or_blak_piece squares_container[bx]
+        cmp piece_color,'b'
+        je exit212
+          set_place_available x_new2,y_new2
+          draw_rectangle x_new2,y_new2,color_avilable_moves2;color_avilable_moves2 is the highlight color
+exit212:
+
+    mov al,current_x2
+    mov x_new2,al
+    mov ah,current_y2
+    mov y_new2,ah
+
+        inc x_new2
+        dec y_new2
+        cmp y_new2,-1
+        jne h312
+        jmp exit222
+        h312:
+        dec y_new2
+        cmp x_new2,8
+        jne h322
+        jmp exit222
+        h322:
+        cmp y_new2,-1
+        jne h_cont20
+        jmp exit222
+        h_cont20:
+        get_0to64_from_xy x_new2,y_new2 ;bl=0to64
+        white_or_blak_piece squares_container[bx]
+        cmp piece_color,'b'
+        je exit222
+          set_place_available x_new2,y_new2
+          draw_rectangle x_new2,y_new2,color_avilable_moves2;color_avilable_moves2 is the highlight color
+exit222:
+
+    mov al,current_x2
+    mov x_new2,al
+    mov ah,current_y2
+    mov y_new2,ah
+
+        dec x_new2
+        inc y_new2
+        cmp y_new2,8
+        jne h412
+        jmp exit232
+        h412:
+        inc y_new2
+        cmp x_new2,-1
+        jne h422
+        jmp exit232
+        h422:
+        cmp y_new2,8
+        jne h_cont30
+        jmp exit232
+        h_cont30:
+        get_0to64_from_xy x_new2,y_new2 ;bl=0to64
+        white_or_blak_piece squares_container[bx]
+        cmp piece_color,'b'
+        je exit232
+          set_place_available x_new2,y_new2
+          draw_rectangle x_new2,y_new2,color_avilable_moves2;color_avilable_moves2 is the highlight color
+exit232:
+
+    mov al,current_x2
+    mov x_new2,al
+    mov ah,current_y2
+    mov y_new2,ah
+
+        inc x_new2
+        cmp x_new2,8
+        jne h512
+        jmp exit244
+        h512:
+        inc x_new2
+        inc y_new2
+        cmp x_new2,8
+        jne h522
+        jmp exit244
+        h522:
+        cmp y_new2,8
+        jne h_cont40
+        jmp exit244
+        h_cont40:
+        get_0to64_from_xy x_new2,y_new2 ;bl=0to64
+        white_or_blak_piece squares_container[bx]
+        cmp piece_color,'b'
+        je exit244
+          set_place_available x_new2,y_new2
+          draw_rectangle x_new2,y_new2,color_avilable_moves2;color_avilable_moves2 is the highlight color
+exit244:
+
+    mov al,current_x2
+    mov x_new2,al
+    mov ah,current_y2
+    mov y_new2,ah
+
+        dec x_new2
+        cmp x_new2,-1
+        jne h612
+        jmp exit255
+        h612:
+        dec x_new2
+        inc y_new2
+        cmp x_new2,-1
+        jne h622
+        jmp exit255
+        h622:
+        cmp y_new2,8
+        jne h_cont50
+        jmp exit255
+        h_cont50:
+        get_0to64_from_xy x_new2,y_new2 ;bl=0to64
+        white_or_blak_piece squares_container[bx]
+        cmp piece_color,'b'
+        je exit255
+          set_place_available x_new2,y_new2
+          draw_rectangle x_new2,y_new2,color_avilable_moves2;color_avilable_moves2 is the highlight color
+exit255:
+
+    mov al,current_x2
+    mov x_new2,al
+    mov ah,current_y2
+    mov y_new2,ah
+
+        dec x_new2
+        cmp x_new2,-1
+        jne h712
+        jmp exit2color_avilable_moves22
+        h712:
+        dec x_new2
+        dec y_new2
+        cmp x_new2,-1
+        jne h722
+        jmp exit2color_avilable_moves22
+        h722:
+        cmp y_new2,-1
+        jne h_cont60
+        jmp exit2color_avilable_moves22
+        h_cont60:
+        get_0to64_from_xy x_new2,y_new2 ;bl=0to64
+        white_or_blak_piece squares_container[bx]
+        cmp piece_color,'b'
+        je exit2color_avilable_moves22
+          set_place_available x_new2,y_new2
+          draw_rectangle x_new2,y_new2,color_avilable_moves2;color_avilable_moves2 is the highlight color
+exit2color_avilable_moves22:
+
+    mov al,current_x2
+    mov x_new2,al
+    mov ah,current_y2
+    mov y_new2,ah
+
+        inc x_new2
+        cmp x_new2,8
+        jne h812
+        jmp exit26667
+        h812:
+        inc x_new2
+        dec y_new2
+        cmp x_new2,8
+        jne h822
+        jmp exit26667
+        h822:
+        cmp y_new2,-1
+        jne h_cont70
+        jmp exit26667
+        h_cont70:
+        get_0to64_from_xy x_new2,y_new2 ;bl=0to64
+        white_or_blak_piece squares_container[bx]
+        cmp piece_color,'b'
+        je exit26667
+          set_place_available x_new2,y_new2
+          draw_rectangle x_new2,y_new2,color_avilable_moves2;color_avilable_moves2 is the highlight color
+exit26667:
+
+ret
+horsee_b endp
+;-----------------
+kingg_b proc
+    mov al,current_x2
+    mov x_new2,al
+    mov ah,current_y2
+    mov y_new2,ah
+
+    inc x_new2
+    cmp x_new2,8
+    jne king_cont00
+    jmp next1b
+    king_cont00:
+    get_0to64_from_xy x_new2,y_new2 ;bl=0to64
+        white_or_blak_piece squares_container[bx]
+        cmp piece_color,'b'
+        je next1b
+                set_place_available x_new2,y_new2
+    draw_rectangle x_new2,y_new2,color_avilable_moves2
+    next1b:
+
+    mov al,current_x2
+    mov x_new2,al
+    mov ah,current_y2
+    mov y_new2,ah
+
+    dec x_new2
+    cmp x_new2,-1
+    jne king_cont11
+    jmp next22
+    king_cont11:
+    get_0to64_from_xy x_new2,y_new2 ;bl=0to64
+        white_or_blak_piece squares_container[bx]
+        cmp piece_color,'b'
+        je next22
+                set_place_available x_new2,y_new2
+    draw_rectangle x_new2,y_new2,color_avilable_moves2
+    next22:
+
+    mov al,current_x2
+    mov x_new2,al
+    mov ah,current_y2
+    mov y_new2,ah
+
+    inc y_new2
+    cmp y_new2,8
+    jne king_cont21
+    jmp next32
+    king_cont21:
+    get_0to64_from_xy x_new2,y_new2 ;bl=0to64
+        white_or_blak_piece squares_container[bx]
+        cmp piece_color,'b'
+        je next32
+                set_place_available x_new2,y_new2
+    draw_rectangle x_new2,y_new2,color_avilable_moves2
+    next32:
+
+    mov al,current_x2
+    mov x_new2,al
+    mov ah,current_y2
+    mov y_new2,ah
+
+    dec y_new2
+    cmp y_new2,-1
+    jne king_cont31
+    jmp next42
+    king_cont31:
+    get_0to64_from_xy x_new2,y_new2 ;bl=0to64
+        white_or_blak_piece squares_container[bx]
+        cmp piece_color,'b'
+        je next42
+                set_place_available x_new2,y_new2
+    draw_rectangle x_new2,y_new2,color_avilable_moves2
+    next42:
+
+    mov al,current_x2
+    mov x_new2,al
+    mov ah,current_y2
+    mov y_new2,ah
+
+    inc x_new2
+    inc y_new2
+    cmp x_new2,8
+    jne kint_cont446
+    jmp next52
+    kint_cont446:
+    cmp y_new2,8
+    jne king_cont41
+    jmp next52
+    king_cont41:
+    get_0to64_from_xy x_new2,y_new2 ;bl=0to64
+        white_or_blak_piece squares_container[bx]
+        cmp piece_color,'b'
+        je next52
+                set_place_available x_new2,y_new2
+    draw_rectangle x_new2,y_new2,color_avilable_moves2
+    next52:
+
+    mov al,current_x2
+    mov x_new2,al
+    mov ah,current_y2
+    mov y_new2,ah
+
+    dec x_new2
+    inc y_new2
+    cmp x_new2,-1
+    jne king_cont551
+    jmp next62
+    king_cont551:
+    cmp y_new2,8
+    jne king_cont51
+    jmp next62
+    king_cont51:
+    get_0to64_from_xy x_new2,y_new2 ;bl=0to64
+        white_or_blak_piece squares_container[bx]
+        cmp piece_color,'b'
+        je next62
+                set_place_available x_new2,y_new2
+    draw_rectangle x_new2,y_new2,color_avilable_moves2
+    next62:
+
+    mov al,current_x2
+    mov x_new2,al
+    mov ah,current_y2
+    mov y_new2,ah
+
+    dec x_new2
+    dec y_new2
+    cmp x_new2,-1
+    jne king_cont661
+    jmp next72
+    king_cont661:
+    cmp y_new2,-1
+    jne king_cont61
+    jmp next72
+    king_cont61:
+    get_0to64_from_xy x_new2,y_new2 ;bl=0to64
+        white_or_blak_piece squares_container[bx]
+        cmp piece_color,'b'
+        je next72
+                set_place_available x_new2,y_new2
+    draw_rectangle x_new2,y_new2,color_avilable_moves2
+    next72:
+
+    mov al,current_x2
+    mov x_new2,al
+    mov ah,current_y2
+    mov y_new2,ah
+
+    inc x_new2
+    dec y_new2
+    cmp x_new2,8
+    jne king_cont771
+    jmp next82
+    king_cont771:
+    cmp y_new2,-1
+    jne king_cont71
+    jmp next82
+    king_cont71:
+    get_0to64_from_xy x_new2,y_new2 ;bl=0to64
+        white_or_blak_piece squares_container[bx]
+        cmp piece_color,'b'
+        je next82
+                set_place_available x_new2,y_new2
+    draw_rectangle x_new2,y_new2,color_avilable_moves2
+    next82:
+ret
+
+kingg_b endp
 ;-----------------
 end main
