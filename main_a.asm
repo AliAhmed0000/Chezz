@@ -1,6 +1,6 @@
 .286
 ;---------part1---------------------
- changetograph macro 
+ changetograph macro
     mov ah,0
     mov al,13h
     int 10h
@@ -977,12 +977,51 @@ square_info LABEL BYTE
 main proc far
     mov ax,@data
     mov ds,ax
-    pusha
-    main_start:
-    popa
+
+main_start:
+;initialize variables
+    mov start,0
+    mov no_rows,8
+    mov no_sqs,8
+    mov continue_counter,1
+    mov winner,0
+    MOV global_cursor,0
+    MOV global_cursor2,0
+    mov sq_cursor_h,4
+    mov sq_cursor_v,0
+    mov sq_cursor_h2,4
+    mov sq_cursor_v2,7
+    mov direction,0
+    mov direction2,0
+    mov selected_piece_x,0
+    mov selected_piece_y,0
+    mov selected_piece_x2,0
+    mov selected_piece_y2,0
+    mov selected_piece_position,0
+    mov selected_piece_position2,0
+    mov selected_piece_type,0
+    mov desired_position,0
+    mov selected_piece_color,0
+    mov selected_piece_color2,0
+    mov selected_piece_type2,0
+    mov desired_position2,0
+    mov current_color,4
+    mov current_color2,2
+    ;initialize move pieces variables
+    mov x_new , 0
+    mov  y_new , 0
+    mov current_x , 0
+    mov current_y , 0
+    mov x_new2 , 0
+        mov  y_new2 , 0
+        mov current_x2 , 0
+        mov current_y2 , 0
+    mov x_rect_avilable,0
+    mov y_rect_avilable,0
+    ;time------------------------array------------------------;
+
 ;-------part1-----------------;
-mov continue_counter,1
-mov winner,0
+
            clearScrean
            changetotxt
 
@@ -1019,7 +1058,7 @@ mov winner,0
 
     time ;set current_second
 continue_label:
-
+;TIME
     mov ah,2ch
     int 21h ;dh= current second
     cmp dh,current_second
@@ -1032,7 +1071,7 @@ continue_label:
     inc current_second ;second passed
     skip444:
     update_time_of_all
-same_second:
+ same_second:
 
     ;wait for user input
   CHECK_ifkeypressed:
@@ -1059,11 +1098,11 @@ je continue_label
 ;--------------------------end of game---------------------;
 someone_wins:
 ;write who won on screen
-; mov ax,0000h;clear screen
-; mov bh,0
-; mov cx,0
-; mov dx,184FH
-; int 10h
+mov ax,0000h;clear screen
+mov bh,0
+mov cx,0
+mov dx,184FH
+int 10h
 
 mov ah,2
 mov dx,1239d
