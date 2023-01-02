@@ -138,7 +138,7 @@ endm setCursor
 
  ENDM display_Message
  ;------------ ****************************************
- UserN_validatin MACRO  Useri_Name   
+ UserN_validatin MACRO  Useri_Name
     local check_UN,invalid_UN,press_enter,end_check
                       
               check_UN: 
@@ -222,8 +222,8 @@ endm setCursor
             end_check:
     
  ENDM UserN_validatin  
- ;------------*****************************************  
- set_cursor_at_middle MACRO      
+ ;------------*****************************************
+ set_cursor_at_middle MACRO
                     
                     
                      mov ah,2
@@ -675,7 +675,7 @@ square_info LABEL BYTE
  db 0,0,0,0,0,0,0,0
  db 0,0,0,0,0,0,0,0
  db 0,0,0,0,0,0,0,0
-;-------------all pieces pixels--------------;
+;------------all pieces pixels--------------;
  ;-------------white pieces--------------;
   soldier db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,7,15,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
   db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,15,15,15,15,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
@@ -943,7 +943,7 @@ square_info LABEL BYTE
  db "THFWKFHT"
 ;-------------check piece_type macro-----------;
  piece_color db ?;to store the piece type
-;-------------some one winned------------------;
+;-------some one winned,killed pieces----------;
  winner db 0;0 no one winned yet , 1 if white winned , 2 if black winned
 ;--------------part1-------------------------;
   string1 db "To start chatting press F1",'$'
