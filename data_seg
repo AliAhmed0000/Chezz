@@ -1,0 +1,17 @@
+b_killed db 0
+w_killed db 0
+b_pieces_mes db 'b pieces gone','$'
+w_pieces_mes db 'w pieces gone','$'
+b_sold_kill_mes  db '*b sold killed**','$'
+b_tab_kill_mes   db '*b tab killed**','$'
+b_fel_kill_mes   db '*b fel killed**','$'
+b_king_kill_mes  db '*b king killed**','$'
+b_wazer_kill_mes db '*b wazer killed**','$'
+b_horse_kill_mes db '*b horse killed**','$'
+
+sold_kill_mes  db '*w sold killed**','$'
+tab_kill_mes   db '*w tab killed**','$'
+fel_kill_mes   db '*w fel killed**','$'
+king_kill_mes  db '*w king killed**','$'
+wazer_kill_mes db '*w wazer killed**','$'
+horse_kill_mes db '*w horse killed**','$'

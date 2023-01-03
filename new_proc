@@ -1,0 +1,99 @@
+ckeck_killed proc
+    mov ah,2
+    mov dx,1500h
+    int 10h
+    mov ah,9
+    cmp squares_container[bx],'0'
+    je enddddd
+    cmp squares_container[bx],'S'
+    je b_sold_kill
+    cmp squares_container[bx],'T'
+    je b_tab_kill
+    cmp squares_container[bx],'F'
+    je b_fel_kill
+    cmp squares_container[bx],'K'
+    je b_king_kill
+    cmp squares_container[bx],'W'
+    je b_wazer_kill
+    cmp squares_container[bx],'H'
+    je b_horse_kill
+    jmp enddddd
+; b_sold_kill_mes  db '*b sold kill**','$'
+; b_tab_kill_mes   db '*b tab kill**','$'
+; b_fel_kill_mes   db '*b fel kill**','$'
+; b_king_kill_mes  db '*b king kill**','$'
+; b_wazer_kill_mes db '*b wazer kill**','$'
+; b_horse_kill_mes db '*b horse kill**','$'
+    b_sold_kill:
+    mov dx,offset b_sold_kill_mes
+    jmp printing_mes
+    b_tab_kill:
+    mov dx,offset b_tab_kill_mes
+    jmp printing_mes
+    b_fel_kill:
+    mov dx,offset b_fel_kill_mes
+    jmp printing_mes
+    b_king_kill:
+    mov dx,offset b_king_kill_mes
+    jmp printing_mes
+    b_wazer_kill:
+    mov dx,offset b_wazer_kill_mes
+    jmp printing_mes
+    b_horse_kill:
+    mov dx,offset b_horse_kill_mes
+    jmp printing_mes
+    printing_mes:
+    int 21h
+    enddddd:
+ret
+ckeck_killed endp
+;-----------------
+ckeck_killed2 proc
+mov ah,2
+    mov dx,1512h
+    int 10h
+    mov ah,9
+    cmp squares_container[bx],'0'
+    je enddddd2
+    cmp squares_container[bx],'s'
+    je sold_kill
+    cmp squares_container[bx],'t'
+    je tab_kill
+    cmp squares_container[bx],'f'
+    je fel_kill
+    cmp squares_container[bx],'k'
+    je king_kill
+    cmp squares_container[bx],'w'
+    je wazer_kill
+    cmp squares_container[bx],'h'
+    je horse_kill
+    jmp enddddd2
+; sold_kill_mes  db '*w sold kill**','$'
+; tab_kill_mes   db '*w tab kill**','$'
+; fel_kill_mes   db '*w fel kill**','$'
+; king_kill_mes  db '*w king kill**','$'
+; wazer_kill_mes db '*w wazer kill**','$'
+; horse_kill_mes db '*w horse kill**','$'
+    sold_kill:
+    mov dx,offset sold_kill_mes
+    jmp printing_mes2
+    tab_kill:
+    mov dx,offset tab_kill_mes
+    jmp printing_mes2
+    fel_kill:
+    mov dx,offset fel_kill_mes
+    jmp printing_mes2
+    king_kill:
+    mov dx,offset king_kill_mes
+    jmp printing_mes2
+    wazer_kill:
+    mov dx,offset wazer_kill_mes
+    jmp printing_mes2
+    horse_kill:
+    mov dx,offset horse_kill_mes
+    jmp printing_mes2
+    printing_mes2:
+    int 21h
+    enddddd2:
+ret
+ckeck_killed2 endp

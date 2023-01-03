@@ -1,0 +1,195 @@
+ckeck_selected2 proc
+;IF R
+    cmp key,'r'
+    je xcx2
+    jmp notr
+    xcx2:
+
+    mov al,sq_cursor_h2
+    mov selected_piece_x2,al
+    mov al,sq_cursor_v2
+    mov selected_piece_y2,al
+
+    mov bl,8
+    mov al,selected_piece_y2
+    mul bl;al=y*8
+    add al,selected_piece_x2
+    mov selected_piece_position2,al
+        draw_rectangle selected_piece_x2,selected_piece_y2,selected_pos_color2
+
+        mov al,selected_piece_x2
+        mov current_x2,al
+        mov al,selected_piece_y2
+        mov current_y2,al
+
+    mov bl,selected_piece_position2
+    mov bh,0
+    mov cl,squares_container[bx]
+    mov selected_piece_type2,cl
+        ;call wazerr,horsee,feeel,kingg 7sb ay piece selected;;;;;;;;;;;;;;;;;;
+    ;check which type of piece is selected
+        ;------------
+        cmp selected_piece_type2,'T'
+        jne not_b_tabiaa2b
+            call tabiaa_b
+        not_b_tabiaa2b:
+        cmp selected_piece_type2,'H'
+        jne not_b_horse2b
+            call horsee_b
+        not_b_horse2b:
+        cmp selected_piece_type2,'F'
+        jne not_b_fel2b4
+            call feeel_b
+        not_b_fel2b4:
+        cmp selected_piece_type2,'W'
+        jne not_b_wazer2b
+            call wazerr_b
+        not_b_wazer2b:
+        cmp selected_piece_type2,'K'
+        jne not_b_king2b
+            call kingg_b
+        not_b_king2b:
+        cmp selected_piece_type2,'S'
+        jne not_b_soldier2b
+            call soldierr_b
+        not_b_soldier2b:
+    ;------------
+notr:
+    ;check if want to move "m key pressed"
+    cmp key,'n'
+    je xcxpp2
+    jmp notn
+    xcxpp2:;key is m check if can move to new position
+;check if can move "time passed from last move > 3 seconds"
+    mov bl,selected_piece_position2
+    mov bh,0
+    mov cl,time_array[bx]
+    cmp cl,3
+    ;JB _3seconds_not_passed2;don't move or do any thing
+    ;JAE vvv
+    je vvv2
+    jmp _3seconds_not_passed2
+    vvv2:
+
+    can_move_or_not sq_cursor_h2,sq_cursor_v2  ;al=1 if can move
+    cmp al,1
+    ;jne can_not_movee2 ;0 can't move
+    je can_moveee2
+    jmp can_not_movee2;not equal 1 don't move
+can_moveee2:
+    reset_available_places
+    ;know which piece to draw
+    ;mov selected_piece_type2,squares_container[selected_piece_position2]
+    mov bl,selected_piece_position2
+    mov bh,0
+    mov cl,squares_container[bx]
+    mov selected_piece_type2,cl
+
+    ;check if it is white or black------------------------------------
+    mov bl,8
+    mov al,sq_cursor_v2
+    mul bl;al=y*8
+    add al,sq_cursor_h2
+    mov desired_position2,al
+
+;------CHECK WHITE OR BLACK TO PREVENT DRAW ON HIS PIECES---------
+ ;removed
+;-------------------------------------------------------
+    ;move piece to new position
+;update time_array of new place set it to 0
+    mov bl,desired_position2
+    mov bh,0
+    mov time_array[bx],0
+
+    mov bl,selected_piece_position2;old position timer reset to 3 to enable moves in it
+    mov bh,0
+    mov time_array[bx],3
+
+    ;call move_piece
+    check_square_color sq_cursor_h2,sq_cursor_v2 ;al=0 if color1
+    cmp al,0
+    ;jne color_is_2_b ;1 if color2
+    je color_is_1_b
+    jmp color_is_2_b
+color_is_1_b:
+    ;color is 1
+    draw_rectangle_not_trans selected_piece_x2,selected_piece_y2,color1 ;draw old place
+    ;draw_piece horse,sq_cursor_h2,sq_cursor_v2
+    call draw_piece_by_type2
+
+    mov cl,color1
+    mov current_color2,cl;to make navigate draw the orginal color of place instead of the highlight color
+
+jmp color_is_1_b_and_drawn2
+color_is_2_b:
+    draw_rectangle_not_trans selected_piece_x2,selected_piece_y2,color2
+    ;draw_piece horse,sq_cursor_h2,sq_cursor_v2
+    call draw_piece_by_type2
+
+    mov cl,color2
+    mov current_color2,cl;to make navigate draw the orginal color of place instead of the highlight color
+
+color_is_1_b_and_drawn2:
+color_is_2_b_and_drawn2:
+;some piece moved successfully
+;check if black wins *****************************************************
+    mov bh,0
+    mov bl,desired_position2 ;bx = desired_position
+    cmp squares_container[bx],'k';white king is dead
+    jne black_has_not_won
+    mov winner,2;black winned
+    mov continue_counter,0;exit game black wins
+ black_has_not_won:
+    cmp squares_container[bx],'a'
+    jae l2533
+    jmp chk_sel_cont2
+    ; w_killed1: 
+    ; cmp squares_container[bx],'0'
+    ; jne l2533
+    ; jmp chk_sel_cont2
+    l2533:
+    inc w_killed
+    add w_killed,30h
+
+    mov ah,2
+    mov dx,1412h
+    int 10h
+    mov dl,w_killed
+    int 21h
+    mov ah,9
+    mov dx,offset w_pieces_mes
+    int 21h
+    sub w_killed,30H
+    push dx
+    call ckeck_killed2
+    pop dx
+
+chk_sel_cont2:
+;update squares_container---
+    mov si,bx                       ;si = desired_position2
+    mov bl,selected_piece_position2 ;bx = selected_piece_position2
+
+    mov squares_container[bx],'0'
+    mov al,selected_piece_type2
+    mov squares_container[si],al
+;------------------------s
+    ;desired_position2,selected_piece_position2
+    ;reset board to un highlighted
+    push di
+    mov di,0
+    call draw_board2
+    pop di
+    
+can_not_movee2:
+_3seconds_not_passed2:
+    ;reset board to un highlighted if me want wrong move
+    push di
+    mov di,0
+    call draw_board2
+    pop di
+notn:
+    ;draw_rectangle sq_cursor_h,sq_cursor_v,sel_color
+    draw_rectangle sq_cursor_h2,sq_cursor_v2,sel_color2
+
+ret
+ckeck_selected2 endp
