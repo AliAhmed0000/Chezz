@@ -987,46 +987,6 @@ main proc far
 call initialize_comm;initialize the serial port
 
 main_start:
-;initialize variables
-    mov start,0
-    mov no_rows,8
-    mov no_sqs,8
-    mov continue_counter,1
-    mov winner,0
-    MOV global_cursor,0
-    MOV global_cursor2,0
-    mov sq_cursor_h,4
-    mov sq_cursor_v,0
-    mov sq_cursor_h2,4
-    mov sq_cursor_v2,7
-    mov direction,0
-    mov direction2,0
-    mov selected_piece_x,0
-    mov selected_piece_y,0
-    mov selected_piece_x2,0
-    mov selected_piece_y2,0
-    mov selected_piece_position,0
-    mov selected_piece_position2,0
-    mov selected_piece_type,0
-    mov desired_position,0
-    mov selected_piece_color,0
-    mov selected_piece_color2,0
-    mov selected_piece_type2,0
-    mov desired_position2,0
-    mov current_color,4
-    mov current_color2,2
-    ;initialize move pieces variables
-    mov x_new , 0
-    mov  y_new , 0
-    mov current_x , 0
-    mov current_y , 0
-    mov x_new2 , 0
-        mov  y_new2 , 0
-        mov current_x2 , 0
-        mov current_y2 , 0
-    mov x_rect_avilable,0
-    mov y_rect_avilable,0
-    ;time------------------------array------------------------;
 
 ;-------part1-----------------;
 
@@ -1146,7 +1106,7 @@ continue_label:
     update_time_of_all
  same_second:
 ;--------------------------------------------------------------------------
-            mov key,'0'
+            mov key,'0';send key rewceived key2
             mov key2,'0'
                 mov dx , 3F8H		; Transmit data register
                                     ;check if key pressed
@@ -1184,13 +1144,27 @@ endcheckkey:
         ;     int 16h ;w=up,s=down,a=left,d=right
         ;     mov key,al
     ;-----
-
+cmp player,2
+jne playernot2
+;--------------------------player2---------------------;
+    call Navigate2
+    call Navigate
+    call ckeck_selected2
+    call ckeck_selected
+    call ckeck_wineer;mov winner 0;1;2
+    jmp emdd
+playernot2:
+mov al,key  
+mov ah,key2
+mov key,ah
+mov key2,al
     call Navigate
     call Navigate2
     call ckeck_selected
     call ckeck_selected2
     call ckeck_wineer;mov winner 0;1;2
 ; ! main loop of game,not to end game
+emdd:
 ;if someone winned i mov winner 1;2 and mov continue_counter 0 to end game you can use jmp someone_wins and check winner in loop and jmp someone_wins instead
 cmp continue_counter,1
 je continue_label
@@ -1241,6 +1215,49 @@ skip_game:
     hlt
 main endp
 ;-----------------
+var proc
+;initialize variables
+    mov start,0
+    mov no_rows,8
+    mov no_sqs,8
+    mov continue_counter,1
+    mov winner,0
+    MOV global_cursor,0
+    MOV global_cursor2,0
+    mov sq_cursor_h,4
+    mov sq_cursor_v,0
+    mov sq_cursor_h2,4
+    mov sq_cursor_v2,7
+    mov direction,0
+    mov direction2,0
+    mov selected_piece_x,0
+    mov selected_piece_y,0
+    mov selected_piece_x2,0
+    mov selected_piece_y2,0
+    mov selected_piece_position,0
+    mov selected_piece_position2,0
+    mov selected_piece_type,0
+    mov desired_position,0
+    mov selected_piece_color,0
+    mov selected_piece_color2,0
+    mov selected_piece_type2,0
+    mov desired_position2,0
+    mov current_color,4
+    mov current_color2,2
+    ;initialize move pieces variables
+    mov x_new , 0
+    mov  y_new , 0
+    mov current_x , 0
+    mov current_y , 0
+    mov x_new2 , 0
+        mov  y_new2 , 0
+        mov current_x2 , 0
+        mov current_y2 , 0
+    mov x_rect_avilable,0
+    mov y_rect_avilable,0
+    ;time------------------------array------------------------;
+ret
+var endp
 initialize_comm proc
     ; initinalize COM
     ;Set Divisor Latch Access Bit
