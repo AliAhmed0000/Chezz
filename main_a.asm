@@ -971,12 +971,20 @@ square_info LABEL BYTE
  lower_initial_point db ?;max initial point is 99 deciamls (i.e less 8 bits)
 
  key1_pressed db 2;0 pleaaase   ;to store the key pressed in part1
+
+;-------------------------------------------------
+player db 0;1 if sender , 2 if receiver
+sended db 0
+received db 0
+start_game db 0;1 if game started
 ;-------------------------------------------------
 
 .code
 main proc far
     mov ax,@data
     mov ds,ax
+
+call initialize_comm;initialize the serial port
 
 main_start:
 ;initialize variables
@@ -1028,13 +1036,78 @@ main_start:
            call Users_screen
            call second
 
-           mov key1_pressed,al;from part1
+           ;mov key1_pressed,al;from part1 al = 1 f1 ,al = 2 f2"ah=3Ch" ,al =  3 esc
+;-----------------------------check if both f4 pressed---------------------;
+still:
+                mov dx , 3F8H		; Transmit data register
+                                    ;check if key pressed
+                mov ah,1
+                int 16h         ;check if key pressed ;get key pressed if any
+                jz nokeypress1
+                mov ah,0
+                int 16h         ;get the pressed key ;; al= letter"ascii" ah= scan code
+                mov al,ah
+                out dx,al     ;send char
+                mov sended , al
+nokeypress1:
+recieve:
+                                ;Check that Data Ready
+            mov dx , 3FDH		; Line Status Register
+        	in al , dx          ;read the char from the register
+            AND al , 1
+            JZ nokeyrecieved1    ;nothing to recieve
+                                ;If Ready read the VALUE in Receive data register
+            mov dx , 03F8H
+            in al , dx          ;al=received char al scan code
+            mov received , al
+nokeyrecieved1:
+;if sended =f2 received =0 ->player1
+    cmp sended,3Ch  ;f2
+    jne failed1
+    rec:
+    cmp received,0
+    jnz failed1
+
+    mov player,1
+    jmp recieve
+
+failed1:
+;if sended =0 received =f2 ->player2
+    cmp received,3ch  ;f2
+    jne failed2
+    rec2:
+    cmp sended,0
+    jnz failed2
+
+    mov player,2
+    jmp still
+failed2:
+;if sended =f2 received =f2 ->both players
+    cmp sended,3Ch  ;f2
+    jne failed3
+    rec3:
+    cmp received,3Ch
+    jne failed3
+    ;mov start_game,0
+    jmp endcheckkey1
+failed3:
+
+;if sended = 0 received = 0 ->no one pressed f2
+    cmp sended,0
+    jne failed4
+    rec4:
+    cmp received,0
+    jne failed4
+    jmp still
+failed4:
+
+endcheckkey1:
 ;-----------------------------;
-    ;initialization
-        cmp key1_pressed,2 ;if F2 is pressed enter game
-        je don_not_jump
-        jmp skip_game
-        don_not_jump:
+    ;initialization //both must press f2 to enter this section"play"
+        ; cmp key1_pressed,2 ;if F2 is pressed enter game
+        ; je don_not_jump
+        ; jmp skip_game
+        ; don_not_jump:
 
         mov ax,0A000h
         mov es,ax
@@ -1058,7 +1131,7 @@ main_start:
 
     time ;set current_second
 continue_label:
-;TIME
+ ;TIME
     mov ah,2ch
     int 21h ;dh= current second
     cmp dh,current_second
@@ -1072,52 +1145,78 @@ continue_label:
     skip444:
     update_time_of_all
  same_second:
+;--------------------------------------------------------------------------
+            mov key,'0'
+            mov key2,'0'
+                mov dx , 3F8H		; Transmit data register
+                                    ;check if key pressed
+                mov ah,1
+                int 16h         ;check if key pressed ;get key pressed if any
+                jz nokeypress
+                mov ah,0
+                int 16h         ;get the pressed key ;; al= letter"ascii" ah= scan code
+                out dx , al     ;send char
+                mov key , al
+nokeypress:
+;recieve
+                                ;Check that Data Ready
+            mov dx , 3FDH		; Line Status Register
+        	in al , dx          ;read the char from the register
+            AND al , 1
+            JZ nokeyrecieved    ;nothing to recieve
+                                ;If Ready read the VALUE in Receive data register
+            mov dx , 03F8H
+            in al , dx          ;al=received char
+            mov key2 , al
+nokeyrecieved:
 
-    ;wait for user input
-  CHECK_ifkeypressed:
-    mov ah,1
-    int 16h;0 if no key pressed
-    jnz key_pressed
-    mov key,'0';set key to 0
-                ;jmp continue_label;        remove me if error
-  key_pressed:
-    mov ah,0 ;consume buffer
-    int 16h ;w=up,s=down,a=left,d=right
-    mov key,al
-
+endcheckkey:
+;--------------------------------------------------------------------------
+    ;wait for user input old
+        ; CHECK_ifkeypressed:
+        ;     mov ah,1
+        ;     int 16h;0 if no key pressed
+        ;     jnz key_pressed
+        ;     mov key,'0';set key to 0
+        ;                 ;jmp continue_label;        remove me if error
+        ; key_pressed:
+        ;     mov ah,0 ;consume buffer
+        ;     int 16h ;w=up,s=down,a=left,d=right
+        ;     mov key,al
+    ;-----
 
     call Navigate
     call Navigate2
     call ckeck_selected
     call ckeck_selected2
     call ckeck_wineer;mov winner 0;1;2
-;main loop of game,not to end game
+; ! main loop of game,not to end game
 ;if someone winned i mov winner 1;2 and mov continue_counter 0 to end game you can use jmp someone_wins and check winner in loop and jmp someone_wins instead
 cmp continue_counter,1
 je continue_label
 ;--------------------------end of game---------------------;
 someone_wins:
 ;write who won on screen
-mov ax,0000h;clear screen
-mov bh,0
-mov cx,0
-mov dx,184FH
-int 10h
+    mov ax,0000h;clear screen
+    mov bh,0
+    mov cx,0
+    mov dx,184FH
+    int 10h
 
-mov ah,2
-mov dx,1239d
-int 10h
-mov ah, 9
-cmp winner,1
-je w_won
+    mov ah,2
+    mov dx,1239d
+    int 10h
+    mov ah, 9
+    cmp winner,1
+    je w_won
 
-mov dx,offset b_won_mes
-int 21h 
-jmp before_skip
-w_won:
-mov dx,offset w_won_mes
-int 21h
-
+    mov dx,offset b_won_mes
+    int 21h 
+    jmp before_skip
+    w_won:
+    mov dx,offset w_won_mes
+    int 21h
+;-----
 
 
 before_skip:
@@ -1141,6 +1240,30 @@ skip_game:
 
     hlt
 main endp
+;-----------------
+initialize_comm proc
+    ; initinalize COM
+    ;Set Divisor Latch Access Bit
+    mov dx,3fbh 			; Line Control Register
+    mov al,10000000b		;Set Divisor Latch Access Bit
+    out dx,al				;Out it
+    ;Set LSB byte of the Baud Rate Divisor Latch register.
+    mov dx,3f8h
+    mov al,0ch
+    out dx,al
+
+    ;Set MSB byte of the Baud Rate Divisor Latch register.
+    mov dx,3f9h
+    mov al,00h
+    out dx,al
+
+    ;Set port configuration
+    mov dx,3fbh
+    mov al,00011011b
+    out dx,al
+
+ret
+initialize_comm endp
 ;-----------------
 ckeck_wineer proc
     cmp winner,0
@@ -2846,7 +2969,7 @@ Navigate2 proc
     ;if al == ascii of any of these letters
     ;it should do a distinct reaction
     ;al == d (right)
-    mov al,key
+    mov al,key2
     cmp al,'h';;read ascii of 'd' from al
     jz cond_go_right22
     cmp al,'f'
@@ -2998,7 +3121,7 @@ this_sq_must_be_col1_or2 endp
 ;-----------------
 ckeck_selected2 proc
 ;IF R
-    cmp key,'r'
+    cmp key2,'r'
     je xcx2
     jmp notr
     xcx2:
@@ -3054,7 +3177,7 @@ ckeck_selected2 proc
     ;------------
 notr:
     ;check if want to move "m key pressed"
-    cmp key,'n'
+    cmp key2,'n'
     je xcxpp2
     jmp notn
     xcxpp2:;key is m check if can move to new position
