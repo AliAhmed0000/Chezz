@@ -1009,6 +1009,13 @@ endm white_or_blak_piece
         wazer_kill_mes db '*w wazer killed**','$'
         horse_kill_mes db '*w horse killed**','$'
 
+    ;invite
+        invitation_sent db 'invitation sent','$'
+        invitation_rec db 'invitation received','$'
+        invitation_sent_printed db 0000h
+        invitation_rec_printed db 0000h
+        bk_pos db 0
+        k_pos db 0
 ;-------------
 
 .code
@@ -1059,7 +1066,22 @@ nokeyrecieved1:
     rec:
     cmp received,3ch
     je failed1
-
+    ;--------------------
+    cmp invitation_sent_printed,0
+    jnz dont_print1
+    ;set curser x=0 y=160"20"
+    mov dl,0
+    mov dh,20
+    mov bh,0
+    mov ah,2
+    int 10h 
+    ;display invitation sent
+    mov ah, 9
+    mov dx, offset invitation_sent
+    int 21h
+    mov invitation_sent_printed,1
+    dont_print1:
+    ;-----------------
     mov player,1
     jmp recieve
 
@@ -1070,7 +1092,26 @@ failed1:
     rec2:
     cmp sended,3ch
     je failed2
-
+    
+    ;--------------------
+    cmp invitation_rec_printed,0
+    jnz printed2
+    ;set curser x=0 y=160
+    mov bh,0
+    mov dl,0
+    mov dh,20
+    mov ah,2
+    int 10h 
+    ;display invitation sent
+    mov ah, 9
+    mov dx, offset invitation_rec
+    int 21h
+    mov invitation_rec_printed,1
+    ;mov ax,0d
+    ;int 10h
+    printed2:
+    ;-----------------
+    
     mov player,2
     jmp still
 failed2:
@@ -1585,6 +1626,8 @@ notq:
     je can_moveee
     jmp can_not_movee;not equal 1 don't move
 can_moveee:
+;call kk
+
     reset_available_places
     ;know which piece to draw
     ;mov selected_piece_type,squares_container[selected_piece_position]
@@ -1640,6 +1683,11 @@ color_is_1_and_drawn:
 color_is_2_and_drawn:
 ;moved piece successfully
 ;check if white wins *****************************************************
+    ; cmp selected_piece_type,'k'
+    ; jne rr
+    ; mov cl,desired_position;-------------------------------------------
+    ; mov k_pos,cl
+    ; rr:
     mov bh,0
     mov bl,desired_position ;bx = desired_position
     cmp squares_container[bx],'K';balck king you someone_wins
@@ -4700,7 +4748,7 @@ get_mode endp
         mov           ax, 1003h
         mov           bx, 0      ; disable blinking.
         int           10h
-        drawHLine     150d
+        drawHLine     160d
 
         setCursor     0d,19d
     
@@ -4840,5 +4888,73 @@ mov ah,2
     enddddd2:
 ret
 ckeck_killed2 endp
+;-----------------
+kk proc;,avilable moves,k_pos
+    push dx
+mov bl,k_pos
+mov bh,0
+cmp available_places[bx],0
+je not_kech
+;kech
+    mov dl,11h;x
+    mov dh,14h;y
+    mov bh,0
+    mov ah,2
+    int 10h
 
+   mov ah,9 ;Display
+    mov bh,0 ;Page 0
+    mov al,'x' ;Letter x
+    mov cx,1h ;1 time
+    mov bl,0FAh ;Green (A) on white(F) background
+    int 10h
+
+not_kech:
+    mov dl,11h;x
+    mov dh,14h;y
+    mov bh,0
+    mov ah,2
+    int 10h
+
+   mov ah,9 ;Display
+    mov bh,0 ;Page 0
+    mov al,' ' ;Letter x
+    mov cx,1h ;1 time
+    mov bl,00h ;Green (A) on white(F) background
+    int 10h
+    ;-------------------
+    mov bl,bk_pos
+mov bh,0
+cmp available_places[bx],0
+je not_kech2
+;kech
+    mov dl,11h;x
+    mov dh,14h;y
+    mov bh,0
+    mov ah,2
+    int 10h
+
+   mov ah,9 ;Display
+    mov bh,0 ;Page 0
+    mov al,'x' ;Letter x
+    mov cx,1h ;1 time
+    mov bl,0FBh ;Green (A) on white(F) background
+    int 10h
+
+not_kech2:
+    mov dl,11h;x
+    mov dh,14h;y
+    mov bh,0
+    mov ah,2
+    int 10h
+
+   mov ah,9 ;Display
+    mov bh,0 ;Page 0
+    mov al,' ' ;Letter x
+    mov cx,1h ;1 time
+    mov bl,00h ;Green (A) on white(F) background
+    int 10h
+pop dx
+ret
+kk endp
 end main
