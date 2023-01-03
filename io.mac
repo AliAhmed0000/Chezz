@@ -1,0 +1,59 @@
+put_string  macro   msg
+    mov dx, offset msg
+    mov ah, 09h
+    int 21h
+endm
+
+get_string macro    buf, cunt, data 
+    mov dx, offset buf
+    mov ah, 0ah
+    int 21h
+    sub bx,bx
+    mov bl, cunt
+    mov [data+bx+1], 0ah
+    mov [data+bx+1], '$'
+endm
+
+clear_screen macro
+    mov ax, 0600h
+    mov bh, 00h
+    mov cx, 0000h
+    mov dx, 184fh
+    int 10h
+endm
+
+draw_horiz_line macro   x, y, page, color, len
+    mov cx, len
+        mov dh, y
+        mov dl, x 
+        mov bh, page
+        mov bl, color
+        mov al, 20h  ;;space character
+        mov ah, 02h
+        int 10h
+        mov ah, 09h
+        int 10h
+endm
+
+draw_vert_line macro   x, y, page, color, len
+    local my_loop
+
+    mov cx, 1
+    mov dh, y
+    mov dl, x
+    mov bh, page
+    mov bl, color
+
+    mov di, len
+my_loop:
+    mov ah, 2h
+    int 10h
+    inc dh
+    mov ah, 9h
+    int 10h
+    dec di
+    jnz my_loop
+
+endm       
+
+

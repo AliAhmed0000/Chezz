@@ -1,4 +1,5 @@
 .286
+include io.mac
 ;---------part1---------------------
  changetograph macro
     mov ah,0
@@ -965,8 +966,8 @@ square_info LABEL BYTE
  
  MSG6 DB 10,13,"Please Press Enter Key to try again$" 
 
- User1_Name DB 16,?,16 DUP('$');max user name size = 15 
- User2_Name DB 16,?,16 DUP('$');max user name size = 15  
+ local_name DB 16,?,16 DUP('$');max user name size = 15 
+ serial_name DB 16,?,16 DUP('$');max user name size = 15  
 
  lower_initial_point db ?;max initial point is 99 deciamls (i.e less 8 bits)
 
@@ -978,7 +979,18 @@ sended db 0
 received db 0
 start_game db 0;1 if game started
 ;-------------------------------------------------
-
+is_end_program		db 0
+mode_local_choice   db 0
+mode_serial_choice  db 1
+local_buffer 		db 50 dup('$')
+local_buffer_index 	db 0
+in_buffer  			db 50 dup('$')
+in_buffer_index    	db 0
+new_line			db 0dh, 0ah, '$'
+is_chat_mode		db 0
+is_game_mode 		db 0
+dum db 0
+;-------------
 .code
 main proc far
     mov ax,@data
@@ -987,79 +999,79 @@ main proc far
 call initialize_comm;initialize the serial port
 
 main_start:
-
+call initializevar ;initialize the variables
 ;-------part1-----------------;
 
            clearScrean
            changetotxt
 
-           call Users_screen
-           call second
+           ;call Users_screen
+           ;call second
 
            ;mov key1_pressed,al;from part1 al = 1 f1 ,al = 2 f2"ah=3Ch" ,al =  3 esc
 ;-----------------------------check if both f4 pressed---------------------;
-; still:
-;                 mov dx , 3F8H		; Transmit data register
-;                                     ;check if key pressed
-;                 mov ah,1
-;                 int 16h         ;check if key pressed ;get key pressed if any
-;                 jz nokeypress1
-;                 mov ah,0
-;                 int 16h         ;get the pressed key ;; al= letter"ascii" ah= scan code
-;                 mov al,ah
-;                 out dx,al     ;send char
-;                 mov sended , al
-; nokeypress1:
-; recieve:
-;                                 ;Check that Data Ready
-;             mov dx , 3FDH		; Line Status Register
-;         	in al , dx          ;read the char from the register
-;             AND al , 1
-;             JZ nokeyrecieved1    ;nothing to recieve
-;                                 ;If Ready read the VALUE in Receive data register
-;             mov dx , 03F8H
-;             in al , dx          ;al=received char al scan code
-;             mov received , al
-; nokeyrecieved1:
-; ;if sended =f2 received =0 ->player1
-;     cmp sended,3Ch  ;f2
-;     jne failed1
-;     rec:
-;     cmp received,0
-;     jnz failed1
+still:
+                mov dx , 3F8H		; Transmit data register
+                                    ;check if key pressed
+                mov ah,1
+                int 16h         ;check if key pressed ;get key pressed if any
+                jz nokeypress1
+                mov ah,0
+                int 16h         ;get the pressed key ;; al= letter"ascii" ah= scan code
+                mov al,ah
+                out dx,al     ;send char
+                mov sended , al
+nokeypress1:
+recieve:
+                                ;Check that Data Ready
+            mov dx , 3FDH		; Line Status Register
+        	in al , dx          ;read the char from the register
+            AND al , 1
+            JZ nokeyrecieved1    ;nothing to recieve
+                                ;If Ready read the VALUE in Receive data register
+            mov dx , 03F8H
+            in al , dx          ;al=received char al scan code
+            mov received , al
+nokeyrecieved1:
+;if sended =f2 received =0 ->player1
+    cmp sended,3Ch  ;f2
+    jne failed1
+    rec:
+    cmp received,0
+    jnz failed1
 
-;     mov player,1
-;     jmp recieve
+    mov player,1
+    jmp recieve
 
-; failed1:
-; ;if sended =0 received =f2 ->player2
-;     cmp received,3ch  ;f2
-;     jne failed2
-;     rec2:
-;     cmp sended,0
-;     jnz failed2
+failed1:
+;if sended =0 received =f2 ->player2
+    cmp received,3ch  ;f2
+    jne failed2
+    rec2:
+    cmp sended,0
+    jnz failed2
 
-;     mov player,2
-;     jmp still
-; failed2:
-; ;if sended =f2 received =f2 ->both players
-;     cmp sended,3Ch  ;f2
-;     jne failed3
-;     rec3:
-;     cmp received,3Ch
-;     jne failed3
-;     ;mov start_game,0
-;     jmp endcheckkey1
-; failed3:
+    mov player,2
+    jmp still
+failed2:
+;if sended =f2 received =f2 ->both players
+    cmp sended,3Ch  ;f2
+    jne failed3
+    rec3:
+    cmp received,3Ch
+    jne failed3
+    ;mov start_game,0
+    jmp endcheckkey1
+failed3:
 
-; ;if sended = 0 received = 0 ->no one pressed f2
-;     cmp sended,0
-;     jne failed4
-;     rec4:
-;     cmp received,0
-;     jne failed4
-;     jmp still
-; failed4:
+;if sended = 0 received = 0 ->no one pressed f2
+    cmp sended,0
+    jne failed4
+    rec4:
+    cmp received,0
+    jne failed4
+    jmp still
+failed4:
 
 endcheckkey1:
 ;-----------------------------;
@@ -1119,56 +1131,63 @@ continue_label:
                 mov key , al
 nokeypress:
 mov start,0
-; ;recieve
-;                                 ;Check that Data Ready
-;             mov dx , 3FDH		; Line Status Register
-;         	in al , dx          ;read the char from the register
-;             AND al , 1
-;             JZ nokeyrecieved    ;nothing to recieve
-;                                 ;If Ready read the VALUE in Receive data register
-;             mov dx , 03F8H
-;             in al , dx          ;al=received char
-;             mov key2 , al
-; nokeyrecieved:
+;recieve
+                                ;Check that Data Ready
+            mov dx , 3FDH		; Line Status Register
+        	in al , dx          ;read the char from the register
+            AND al , 1
+            JZ nokeyrecieved    ;nothing to recieve
+                                ;If Ready read the VALUE in Receive data register
+            mov dx , 03F8H
+            in al , dx          ;al=received char
+            mov key2 , al
+nokeyrecieved:
 
-endcheckkey:
+endcheckkey:;key send    key2 received
 ;--------------------------------------------------------------------------
     ;wait for user input old
-        CHECK_ifkeypressed:
-            mov ah,1
-            int 16h;0 if no key pressed
-            jnz key_pressed
-            mov key,'0';set key to 0
-                        ;jmp continue_label;        remove me if error
-        key_pressed:
-            mov ah,0 ;consume buffer
-            int 16h ;w=up,s=down,a=left,d=right
-            mov key,al
+        ; CHECK_ifkeypressed:
+        ;     mov ah,1
+        ;     int 16h;0 if no key pressed
+        ;     jnz key_pressed
+        ;     mov key,'0';set key to 0
+        ;                 ;jmp continue_label;        remove me if error
+        ; key_pressed:
+        ;     mov ah,0 ;consume buffer
+        ;     int 16h ;w=up,s=down,a=left,d=right
+        ;     mov key,al
     ;-----
-; cmp player,2
-; jne playernot2
+cmp player,2
+jne playernot2
 ;--------------------------player2---------------------;
+mov al,key
+mov ah,key2
+mov key,ah;received
+mov key2,al
     call Navigate2
     call Navigate
     call ckeck_selected2
     call ckeck_selected
     call ckeck_wineer;mov winner 0;1;2
-    ;jmp emdd
-; playernot2:
-; mov al,key 
-; mov ah,key2
-; mov key,ah
-; mov key2,al
-;     call Navigate
-;     call Navigate2
-;     call ckeck_selected
-;     call ckeck_selected2
-;     call ckeck_wineer;mov winner 0;1;2
-; ; ! main loop of game,not to end game
-; emdd:
+    jmp emdd
+playernot2:
+mov al,key
+mov ah,key2
+mov key,al;sent
+mov key2,ah
+    call Navigate
+    call Navigate2
+    call ckeck_selected
+    call ckeck_selected2
+    call ckeck_wineer;mov winner 0;1;2
+; ! main loop of game,not to end game
+emdd:
 ;if someone winned i mov winner 1;2 and mov continue_counter 0 to end game you can use jmp someone_wins and check winner in loop and jmp someone_wins instead
 cmp continue_counter,1
-je continue_label
+;je continue_label
+jne lklk
+jmp continue_label
+lklk:
 ;--------------------------end of game---------------------;
 someone_wins:
 ;write who won on screen
@@ -1216,7 +1235,7 @@ skip_game:
     hlt
 main endp
 ;-----------------
-var proc
+initializevar proc
 ;initialize variables
     mov start,0
     mov no_rows,8
@@ -1258,7 +1277,7 @@ var proc
     mov y_rect_avilable,0
     ;time------------------------array------------------------;
 ret
-var endp
+initializevar endp
 initialize_comm proc
     ; initinalize COM
     ;Set Divisor Latch Access Bit
@@ -2886,7 +2905,7 @@ Users_screen   PROC
                 
                   ;username_interface:player 1st palyer
                   
-                   username_interface User1_Name       ;/\/\/\/\/\/\/\
+                   username_interface local_name       ;/\/\/\/\/\/\/\
                   
                     
         press_enter2: 
@@ -2915,7 +2934,7 @@ Users_screen   PROC
                        
                        
                         ;username interface:player 2   
-                         username_interface User2_Name ;/\/\/\/\/\/\/\
+                        username_interface serial_name ;/\/\/\/\/\/\/\
                    
                    
                    pop ax; ax=user#2 ==> initial point
@@ -2930,7 +2949,7 @@ Users_screen   PROC
    choose_user1_IP: mov dx,bx   
   
    push_result:     
-                   mov lower_initial_point,dl;max initial_point was assumed 99 deciamls
+                  ; mov lower_initial_point,dl;max initial_point was assumed 99 deciamls
                     
 ;-------------------------    
                     
@@ -2938,38 +2957,38 @@ ret
 
 Users_screen                   ENDP  
 ;-----------------
-second proc
+; second proc
 
-       changetograph
+    ;        changetograph
 
-       setCursor     8d,5d
-       displayString string1
-       setCursor     8d,7d
-       displayString string2
-       setCursor     8d,9d
-       displayString string3
-
-
-       mov           ax, 1003h
-       mov           bx, 0      ; disable blinking.
-       int           10h
-       drawHLine     150d
-
-       setCursor     0d,19d
- 
-
-  A:   
-       getKey
-       checkKey
-       cmp           al,0
-       jz            A
+    ;        setCursor     8d,5d
+    ;        displayString string1
+    ;        setCursor     8d,7d
+    ;        displayString string2
+    ;        setCursor     8d,9d
+    ;        displayString string3
 
 
+    ;        mov           ax, 1003h
+    ;        mov           bx, 0      ; disable blinking.
+    ;        int           10h
+    ;        drawHLine     150d
+
+    ;        setCursor     0d,19d
     
-ret
-       
-    
-second endp
+
+    ;   A:   
+    ;        getKey
+    ;        checkKey
+    ;        cmp           al,0
+    ;        jz            A
+
+
+        
+    ; ret
+        
+        
+    ; second endp
 ;-----end part 1-----------
 Navigate2 proc
 
@@ -4210,4 +4229,441 @@ ret
 
 kingg_b endp
 ;-----------------
+
+get_mode proc
+	push ax
+	push dx
+	
+gm_check_if_match:
+	mov ah, mode_local_choice
+	mov al, mode_serial_choice
+	cmp al, ah
+	jz gm_found_match
+	
+	;get local choice
+	  A:   
+       getKey
+       checkKey
+       cmp           bl,0
+       jz            A
+
+
+	jz gm_see_serial_choice
+	mov ah, 00h
+	int 16h
+	
+	mov mode_local_choice, ah
+	
+	mov dx, 3fdh
+gm_again_send:
+	in al, dx
+	test al, 00100000b
+	jz gm_again_send
+	
+	mov dx, 3f8h
+	mov al, mode_local_choice
+	out dx, al
+	
+gm_see_serial_choice:
+	
+	mov dx, 3fdh
+	in al, dx
+	test al, 1
+	jz gm_check_if_match
+	
+	mov al, 0
+	mov dx, 3f8h
+	in al, dx
+	
+	mov mode_serial_choice, al
+	
+	jmp gm_check_if_match
+	
+gm_found_match:	
+	cmp mode_local_choice, 3bh ;F1
+	jnz not_f1
+	mov is_chat_mode, 1
+	jmp gm_exit
+	
+not_f1:
+	cmp mode_local_choice, 3ch ;F2
+	jnz not_f2
+	mov is_game_mode, 1
+	jmp gm_exit
+	
+not_f2:
+	cmp mode_local_choice, 3dh ;F3
+	jnz not_f3
+	mov is_end_program, 1
+	jmp gm_exit
+	
+not_f3: ; invalid choice
+	mov mode_local_choice, 0
+	mov mode_serial_choice, 1
+	jmp gm_check_if_match
+	
+gm_exit:
+	mov mode_local_choice, 0
+	mov mode_serial_choice, 1
+	pop dx
+	pop ax
+	ret
+get_mode endp
+
+;--------------------
+clear_writing_box   proc    near
+draw_horiz_line 0, 24, 0, 20h, 80
+draw_vert_line  39, 23, 0, 40h, 2
+draw_vert_line  40, 23, 0, 40h, 2
+draw_vert_line  41, 23, 0, 40h, 2
+ret
+clear_writing_box   endp
+
+
+init_serial_connection proc
+	push ax
+	push bx
+	push cx
+	push dx
+	
+	mov dx, 3fbh
+	mov al, 10000000b
+	out dx, al
+	
+	mov dx, 3f8h
+	mov al, 0ch
+	out dx, al
+	
+	mov dx, 3f9h
+	mov al, 00h
+	out dx, al
+	
+	mov dx, 3fbh
+	mov al, 00011011b
+	out dx, al
+		
+	pop dx
+	pop cx
+	pop bx
+	pop dx
+	ret
+init_serial_connection endp
+scroll_chat_up      proc    near
+push ax
+push bx
+push cx
+push dx
+
+mov ah, 06h
+mov al, 01h
+mov bh, 0fh
+mov ch, 01
+mov cl, 01
+mov dh, 21
+mov dl, 39
+int 10h
+
+mov ah, 06h
+mov al, 01h
+mov bh, 0fh
+mov ch, 01
+mov cl, 41
+mov dh, 21
+mov dl, 78
+int 10h
+
+pop dx
+pop cx
+pop bx
+pop ax
+ret
+scroll_chat_up      endp
+
+chat proc far
+	push ax
+	push bx
+	push cx
+	push dx
+	
+	mov ax, @data
+	mov ds, ax
+	
+;back to text mode 80 x 25
+mov ah, 00h
+mov al, 03h
+int 10h
+
+;disable blinking
+mov ax, 1003h
+mov bx, 0
+int 10h
+
+;draw chat boxes
+draw_horiz_line 0, 0, 0, 0e0h, 80 
+draw_horiz_line 0, 22, 0, 0e0h, 80
+
+draw_vert_line  0, 1, 0, 0e0h, 21
+draw_vert_line  40, 1, 0, 40h, 21
+draw_vert_line  79, 1, 0, 0e0h, 21
+draw_horiz_line 0, 23, 0, 0f0h, 80 
+
+   call clear_writing_box
+;--------------------------------
+	
+	call init_serial_connection
+	
+	 
+	;put cursor position for local name
+	mov ah, 02h
+	mov dh, 23
+	mov dl, 15
+	mov bh, 0
+	int 10h	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	put_string local_name
+	
+	;put cursor poistion for serial name
+	mov ah, 02h
+	mov dh, 23
+	mov dl, 55
+	mov bh, 0
+	int 10h	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+	put_string serial_name
+
+	
+	;put begining of input text box
+	mov ah, 02h
+	mov dh, 24
+	mov dl, 0 
+	mov bh, 0
+	int 10h
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+    chat_loop:
+
+	;check if key is pressed
+	mov al, 00h
+	mov ah, 01h
+	int 16h
+	jz check_the_other_user
+	
+	;get the pressed key
+	mov ah, 00h
+	int 16h
+	
+	cmp ah, 3bh ;F1 end chat
+    ;jz chat_exit
+    jnz sj
+    jmp chat_exit 
+	sj:
+	cmp ah, 3fh ;F5 change to game
+	;jz chat_toggle
+    jnz slkd
+    jmp chat_toggle
+    slkd:
+	
+	;display character
+	mov ah, 02
+	mov dl, al
+	int 21h
+	
+	;move the pressed key to the local buffer
+	sub bh, bh
+	mov bl, local_buffer_index
+	mov local_buffer[bx], al
+	inc local_buffer_index	
+	
+	mov dx, 3fdh
+    again_sending:
+	in al, dx
+	test al, 00100000b
+	jz again_sending
+	
+	mov dx, 3f8h
+	mov al, local_buffer[bx]
+	out dx, al
+	
+	cmp al, 0Dh ;check enter
+	jnz check_the_other_user
+	
+	call scroll_chat_up
+	
+	; set cursor
+	mov ah, 02h
+	mov dh, 21
+	mov dl, 2
+	mov bh, 0
+	int 10h
+	
+	; print the message
+	put_string local_buffer	
+	call clear_writing_box
+	mov ah, 02h
+	mov dh, 24
+	mov dl, 0
+	mov bh, 0
+	int 10h
+	mov local_buffer_index, 0
+	
+	mov bx, offset local_buffer
+	mov cx, 50
+clear_local_buffer:
+    mov dum,al
+    mov al,'$'
+	mov[bx],al
+    mov al,dum
+	inc bx
+	dec cx
+	jnz clear_local_buffer
+				
+check_the_other_user:
+;---------------------------------
+; see if input from the other user
+	mov dx,  3fdh
+	in al, dx
+	test al, 1
+	;jz chat_loop
+	jnz skkk
+    jmp chat_loop
+    skkk:
+	mov al, 0
+	mov dx, 3f8h
+	in al, dx
+	
+	cmp al, 3bh ;F1
+	jz chat_end
+	cmp al, 3fh ;F5
+	jz chat_toggle_end
+	
+	sub bh, bh
+	mov bl, in_buffer_index
+	mov in_buffer[bx], al
+	inc in_buffer_index	
+	cmp al, 0Dh
+	;jnz chat_loop	
+	jz sll
+    jmp chat_loop
+    sll:
+	call scroll_chat_up
+	mov ah, 02h
+	mov dh, 21 
+	mov dl, 43 
+	mov bh, 0
+	int 10h
+	put_string in_buffer	
+	call clear_writing_box
+	mov ah, 02h
+	mov dh, 24
+	mov dl, 0 
+	mov bh, 0
+	int 10h
+	mov in_buffer_index, 0
+	
+	mov bx, offset in_buffer
+	mov cx, 50
+clear_in_buffer:
+    mov dum,al
+    mov al,'$'
+	mov[bx],al
+    mov al,dum
+	inc bx
+	dec cx
+	jnz clear_in_buffer
+;---------------------------------
+jmp chat_loop
+
+chat_toggle:
+	mov dx, 3fdh
+texit_again_sending:
+	in al, dx
+	test al, 00100000b
+	jz texit_again_sending
+	
+	mov dx, 3f8h
+	mov al, 3fh ;F5
+	out dx, al
+chat_toggle_end:
+	mov is_game_mode, 1
+	jmp chat_end
+	
+chat_exit:
+	mov dx, 3fdh
+exit_again_sending:
+	in al, dx
+	test al, 00100000b
+	jz exit_again_sending
+	
+	mov dx, 3f8h
+	mov al, 3bh ;F1
+	out dx, al
+	
+chat_end:
+	mov is_chat_mode, 0	
+	pop dx
+	pop cx
+	pop bx
+	pop ax
+	ret
+chat endp
+
+second proc
+
+
+
+       changetograph
+
+       setCursor     8d,5d
+       displayString string1
+       setCursor     8d,7d
+       displayString string2
+       setCursor     8d,9d
+       displayString string3
+
+
+       mov           ax, 1003h
+       mov           bx, 0      ; disable blinking.
+       int           10h
+       drawHLine     150d
+
+       setCursor     0d,19d
+   
+main_loop:
+
+    call get_mode
+
+check_chat_mode:	
+	cmp is_chat_mode, 1
+	jnz check_game_mode
+	call chat
+    jmp fin
+
+
+check_game_mode:	
+	cmp is_game_mode, 1
+	jnz check_end_program
+	;call game
+	jmp fin
+	;cmp is_chat_mode, 1
+	;jz check_chat_mode
+	
+check_end_program:
+	cmp is_end_program, 1
+	jnz main_loop
+
+fin:
+	mov ah, 4ch
+	int 21h
+
+
+
+
+    
+
+       
+    
+second endp
+
 end main
