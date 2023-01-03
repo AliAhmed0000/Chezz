@@ -1,6 +1,6 @@
 ckeck_selected2 proc
 ;IF R
-    cmp key,'r'
+    cmp key2,'r'
     je xcx2
     jmp notr
     xcx2:
@@ -56,7 +56,7 @@ ckeck_selected2 proc
     ;------------
 notr:
     ;check if want to move "m key pressed"
-    cmp key,'n'
+    cmp key2,'n'
     je xcxpp2
     jmp notn
     xcxpp2:;key is m check if can move to new position
