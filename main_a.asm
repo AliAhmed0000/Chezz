@@ -998,68 +998,68 @@ main_start:
 
            ;mov key1_pressed,al;from part1 al = 1 f1 ,al = 2 f2"ah=3Ch" ,al =  3 esc
 ;-----------------------------check if both f4 pressed---------------------;
-still:
-                mov dx , 3F8H		; Transmit data register
-                                    ;check if key pressed
-                mov ah,1
-                int 16h         ;check if key pressed ;get key pressed if any
-                jz nokeypress1
-                mov ah,0
-                int 16h         ;get the pressed key ;; al= letter"ascii" ah= scan code
-                mov al,ah
-                out dx,al     ;send char
-                mov sended , al
-nokeypress1:
-recieve:
-                                ;Check that Data Ready
-            mov dx , 3FDH		; Line Status Register
-        	in al , dx          ;read the char from the register
-            AND al , 1
-            JZ nokeyrecieved1    ;nothing to recieve
-                                ;If Ready read the VALUE in Receive data register
-            mov dx , 03F8H
-            in al , dx          ;al=received char al scan code
-            mov received , al
-nokeyrecieved1:
-;if sended =f2 received =0 ->player1
-    cmp sended,3Ch  ;f2
-    jne failed1
-    rec:
-    cmp received,0
-    jnz failed1
+; still:
+;                 mov dx , 3F8H		; Transmit data register
+;                                     ;check if key pressed
+;                 mov ah,1
+;                 int 16h         ;check if key pressed ;get key pressed if any
+;                 jz nokeypress1
+;                 mov ah,0
+;                 int 16h         ;get the pressed key ;; al= letter"ascii" ah= scan code
+;                 mov al,ah
+;                 out dx,al     ;send char
+;                 mov sended , al
+; nokeypress1:
+; recieve:
+;                                 ;Check that Data Ready
+;             mov dx , 3FDH		; Line Status Register
+;         	in al , dx          ;read the char from the register
+;             AND al , 1
+;             JZ nokeyrecieved1    ;nothing to recieve
+;                                 ;If Ready read the VALUE in Receive data register
+;             mov dx , 03F8H
+;             in al , dx          ;al=received char al scan code
+;             mov received , al
+; nokeyrecieved1:
+; ;if sended =f2 received =0 ->player1
+;     cmp sended,3Ch  ;f2
+;     jne failed1
+;     rec:
+;     cmp received,0
+;     jnz failed1
 
-    mov player,1
-    jmp recieve
+;     mov player,1
+;     jmp recieve
 
-failed1:
-;if sended =0 received =f2 ->player2
-    cmp received,3ch  ;f2
-    jne failed2
-    rec2:
-    cmp sended,0
-    jnz failed2
+; failed1:
+; ;if sended =0 received =f2 ->player2
+;     cmp received,3ch  ;f2
+;     jne failed2
+;     rec2:
+;     cmp sended,0
+;     jnz failed2
 
-    mov player,2
-    jmp still
-failed2:
-;if sended =f2 received =f2 ->both players
-    cmp sended,3Ch  ;f2
-    jne failed3
-    rec3:
-    cmp received,3Ch
-    jne failed3
-    ;mov start_game,0
-    jmp endcheckkey1
-failed3:
+;     mov player,2
+;     jmp still
+; failed2:
+; ;if sended =f2 received =f2 ->both players
+;     cmp sended,3Ch  ;f2
+;     jne failed3
+;     rec3:
+;     cmp received,3Ch
+;     jne failed3
+;     ;mov start_game,0
+;     jmp endcheckkey1
+; failed3:
 
-;if sended = 0 received = 0 ->no one pressed f2
-    cmp sended,0
-    jne failed4
-    rec4:
-    cmp received,0
-    jne failed4
-    jmp still
-failed4:
+; ;if sended = 0 received = 0 ->no one pressed f2
+;     cmp sended,0
+;     jne failed4
+;     rec4:
+;     cmp received,0
+;     jne failed4
+;     jmp still
+; failed4:
 
 endcheckkey1:
 ;-----------------------------;
@@ -1118,53 +1118,54 @@ continue_label:
                 out dx , al     ;send char
                 mov key , al
 nokeypress:
-;recieve
-                                ;Check that Data Ready
-            mov dx , 3FDH		; Line Status Register
-        	in al , dx          ;read the char from the register
-            AND al , 1
-            JZ nokeyrecieved    ;nothing to recieve
-                                ;If Ready read the VALUE in Receive data register
-            mov dx , 03F8H
-            in al , dx          ;al=received char
-            mov key2 , al
-nokeyrecieved:
+mov start,0
+; ;recieve
+;                                 ;Check that Data Ready
+;             mov dx , 3FDH		; Line Status Register
+;         	in al , dx          ;read the char from the register
+;             AND al , 1
+;             JZ nokeyrecieved    ;nothing to recieve
+;                                 ;If Ready read the VALUE in Receive data register
+;             mov dx , 03F8H
+;             in al , dx          ;al=received char
+;             mov key2 , al
+; nokeyrecieved:
 
 endcheckkey:
 ;--------------------------------------------------------------------------
     ;wait for user input old
-        ; CHECK_ifkeypressed:
-        ;     mov ah,1
-        ;     int 16h;0 if no key pressed
-        ;     jnz key_pressed
-        ;     mov key,'0';set key to 0
-        ;                 ;jmp continue_label;        remove me if error
-        ; key_pressed:
-        ;     mov ah,0 ;consume buffer
-        ;     int 16h ;w=up,s=down,a=left,d=right
-        ;     mov key,al
+        CHECK_ifkeypressed:
+            mov ah,1
+            int 16h;0 if no key pressed
+            jnz key_pressed
+            mov key,'0';set key to 0
+                        ;jmp continue_label;        remove me if error
+        key_pressed:
+            mov ah,0 ;consume buffer
+            int 16h ;w=up,s=down,a=left,d=right
+            mov key,al
     ;-----
-cmp player,2
-jne playernot2
+; cmp player,2
+; jne playernot2
 ;--------------------------player2---------------------;
     call Navigate2
     call Navigate
     call ckeck_selected2
     call ckeck_selected
     call ckeck_wineer;mov winner 0;1;2
-    jmp emdd
-playernot2:
-mov al,key  
-mov ah,key2
-mov key,ah
-mov key2,al
-    call Navigate
-    call Navigate2
-    call ckeck_selected
-    call ckeck_selected2
-    call ckeck_wineer;mov winner 0;1;2
-; ! main loop of game,not to end game
-emdd:
+    ;jmp emdd
+; playernot2:
+; mov al,key 
+; mov ah,key2
+; mov key,ah
+; mov key2,al
+;     call Navigate
+;     call Navigate2
+;     call ckeck_selected
+;     call ckeck_selected2
+;     call ckeck_wineer;mov winner 0;1;2
+; ; ! main loop of game,not to end game
+; emdd:
 ;if someone winned i mov winner 1;2 and mov continue_counter 0 to end game you can use jmp someone_wins and check winner in loop and jmp someone_wins instead
 cmp continue_counter,1
 je continue_label
